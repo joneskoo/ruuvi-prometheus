@@ -17,6 +17,8 @@ import (
 )
 
 const (
+    // defaultListen is the Prometheus metrics port.
+    // Allocated in https://github.com/prometheus/prometheus/wiki/Default-port-allocations
 	defaultListen = "127.0.0.1:9521"
 )
 
