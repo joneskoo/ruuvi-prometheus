@@ -8,11 +8,11 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-var handlers = http.NewServeMux()
+var Handler = http.NewServeMux()
 
 func init() {
-	handlers.HandleFunc("/", handleRoot)
-	handlers.Handle("/metrics", promhttp.Handler())
+	Handler.HandleFunc("/", handleRoot)
+	Handler.Handle("/metrics", promhttp.Handler())
 }
 
 const rootContent = `ruuvi-prometheus exporter

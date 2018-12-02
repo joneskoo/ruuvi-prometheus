@@ -5,9 +5,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -17,29 +20,43 @@ import (
 )
 
 const (
-    // defaultListen is the Prometheus metrics port.
-    // Allocated in https://github.com/prometheus/prometheus/wiki/Default-port-allocations
+	// defaultListen is the Prometheus metrics port.
+	// Allocated in https://github.com/prometheus/prometheus/wiki/Default-port-allocations
 	defaultListen = ":9521"
 )
 
 func main() {
 	cmdline := parseSettings()
 
+	log.Printf("ruuvi-prometheus listening on %v", cmdline.listen)
+
 	if !cmdline.debug {
+		// FIXME: bluewalker outputs to global logger so we need to discard all log globally
 		log.SetOutput(ioutil.Discard)
 	}
 
+	server := http.Server{
+		Addr:    cmdline.listen,
+		Handler: metrics.Handler,
+	}
+	scanner := bluetooth.New(bluetooth.ScannerOpts{
+		Device: cmdline.device,
+		Logger: getDebugLogger(cmdline.debug),
+	})
+
 	terminate := make(chan os.Signal, 1)
+	errCh := make(chan error, 1)
 	signal.Notify(terminate, syscall.SIGTERM, syscall.SIGINT)
 
-	errCh := make(chan error, 1)
-
+	// HTTP listener
 	go func() {
-		errCh <- metrics.Start(cmdline.listen)
+		err := server.ListenAndServe()
+		errCh <- err
 	}()
 
+	// Bluetooth scanner
 	go func() {
-		observations, err := bluetooth.Listen(cmdline.device, cmdline.debug)
+		observations, err := scanner.Scan()
 		if err != nil {
 			errCh <- err
 		}
@@ -48,12 +65,25 @@ func main() {
 		}
 	}()
 
+	exitCode := 0
 	select {
 	case sig := <-terminate:
 		fmt.Fprintf(os.Stderr, "Exiting on signal %v\n", sig)
-		os.Exit(0)
 	case err := <-errCh:
 		fmt.Fprintf(os.Stderr, "Exiting on error: %v\n", err)
-		os.Exit(1)
+		exitCode = 1
 	}
+
+	scanner.Shutdown()
+	server.Shutdown(context.TODO())
+
+	os.Exit(exitCode)
+}
+
+func getDebugLogger(debug bool) *log.Logger {
+	var output io.Writer = os.Stderr
+	if !debug {
+		output = ioutil.Discard
+	}
+	return log.New(output, "DEBUG: ", log.LstdFlags)
 }

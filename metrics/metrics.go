@@ -3,18 +3,10 @@
 package metrics
 
 import (
-	"log"
-	"net/http"
-
 	"github.com/joneskoo/ruuvi-prometheus/bluetooth"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
-
-func Start(addr string) error {
-	log.Printf("ruuvi-prometheus listening on %v", addr)
-	return http.ListenAndServe(addr, handlers)
-}
 
 var (
 	ruuviFrames = promauto.NewCounterVec(prometheus.CounterOpts{
