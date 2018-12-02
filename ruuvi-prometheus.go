@@ -17,6 +17,8 @@ import (
 
 	"github.com/joneskoo/ruuvi-prometheus/bluetooth"
 	"github.com/joneskoo/ruuvi-prometheus/metrics"
+	"gitlab.com/jtaimisto/bluewalker/host"
+	"gitlab.com/jtaimisto/bluewalker/ruuvi"
 )
 
 const (
@@ -56,13 +58,24 @@ func main() {
 
 	// Bluetooth scanner
 	go func() {
-		observations, err := scanner.Scan()
+		scanResults, err := scanner.Scan()
 		if err != nil {
 			errCh <- err
 		}
-		for o := range observations {
-			metrics.ObserveRuuvi(o)
+
+		for sr := range scanResults {
+			for _, ads := range sr.Data {
+				ruuviData, err := ruuvi.Unmarshall(ads.Data)
+				if err != nil {
+					log.Printf("Unable to parse ruuvi data: %v", err)
+					continue
+				}
+
+				reading := ruuviReading{sr, ruuviData}
+				metrics.ObserveRuuvi(reading)
+			}
 		}
+		log.Print("End of receive loop")
 	}()
 
 	exitCode := 0
@@ -87,3 +100,18 @@ func getDebugLogger(debug bool) *log.Logger {
 	}
 	return log.New(output, "DEBUG: ", log.LstdFlags)
 }
+
+type ruuviReading struct {
+	sr   *host.ScanReport
+	data *ruuvi.Data
+}
+
+func (r ruuviReading) Address() string        { return r.sr.Address.String() }
+func (r ruuviReading) RSSI() float64          { return float64(r.sr.Rssi) }
+func (r ruuviReading) Humidity() float64      { return float64(r.data.Humidity) / 100 }
+func (r ruuviReading) Temperature() float64   { return float64(r.data.Temperature) }
+func (r ruuviReading) Pressure() float64      { return float64(r.data.Pressure) / 100 }
+func (r ruuviReading) AccelerationX() float64 { return float64(r.data.AccelerationX) }
+func (r ruuviReading) AccelerationY() float64 { return float64(r.data.AccelerationY) }
+func (r ruuviReading) AccelerationZ() float64 { return float64(r.data.AccelerationZ) }
+func (r ruuviReading) Voltage() float64       { return float64(r.data.Voltage) / 1000 }

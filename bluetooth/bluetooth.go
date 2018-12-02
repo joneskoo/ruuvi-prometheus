@@ -35,29 +35,7 @@ import (
 	"gitlab.com/jtaimisto/bluewalker/filter"
 	"gitlab.com/jtaimisto/bluewalker/hci"
 	"gitlab.com/jtaimisto/bluewalker/host"
-	"gitlab.com/jtaimisto/bluewalker/ruuvi"
 )
-
-type RuuviReading struct {
-	// Address is the sensor Bluetooth address.
-	Address string
-	// RSSI is the received signal strength in dBm.
-	RSSI float64
-	// Humidity is the measured relative humidity 0..1.
-	Humidity float64
-	// Temperature is the measured temperature in °C.
-	Temperature float64
-	// Pressure is the air pressure in hPa.
-	Pressure float64
-	// AccelerationX is the acceleration sensor X axis reading in g.
-	AccelerationX float64
-	// AccelerationY is the acceleration sensor Y axis reading in g.
-	AccelerationY float64
-	// AccelerationZ is the acceleration sensor Z axis reading in g.
-	AccelerationZ float64
-	// Voltage is the sensor battery voltage in Volts.
-	Voltage float64
-}
 
 // Scanner scans for Bluetooth LE advertisements.
 type Scanner struct {
@@ -100,61 +78,7 @@ func filterVendorIsRuuvi() []filter.AdFilter {
 	return []filter.AdFilter{flt}
 }
 
-func (s *Scanner) Scan() (<-chan RuuviReading, error) {
-	scanResults, err := s.startScanning()
-	if err != nil {
-		return nil, err
-	}
-
-	observations := make(chan RuuviReading)
-	receiveloop := func() {
-		s.log.Print("Starting receive loop")
-		defer close(observations)
-
-		for sr := range scanResults {
-			s.log.Print("Received frame")
-			for _, ads := range sr.Data {
-				ruuviData, err := ruuvi.Unmarshall(ads.Data)
-				if err != nil {
-					s.log.Printf("Unable to parse ruuvi data: %v", err)
-					continue
-				}
-
-				observations <- RuuviReading{
-					Address:       sr.Address.String(),
-					RSSI:          float64(sr.Rssi),
-					Humidity:      float64(ruuviData.Humidity) / 100,
-					Temperature:   float64(ruuviData.Temperature),
-					Pressure:      float64(ruuviData.Pressure) / 100,
-					AccelerationX: float64(ruuviData.AccelerationX),
-					AccelerationY: float64(ruuviData.AccelerationY),
-					AccelerationZ: float64(ruuviData.AccelerationZ),
-					Voltage:       float64(ruuviData.Voltage) / 1000,
-				}
-			}
-		}
-		s.log.Print("End of receive loop")
-		close(s.quit)
-	}
-
-	go receiveloop()
-
-	return observations, nil
-}
-
-func (s *Scanner) Shutdown() {
-	s.log.Print("Requesting to stop scan")
-
-	select {
-	case s.quit <- struct{}{}:
-	default:
-	}
-
-	<-s.quit
-}
-
-func (s *Scanner) startScanning() (chan *host.ScanReport, error) {
-	// FIXME: second use of the same scanner breaks shutdown logic
+func (s *Scanner) Scan() (<-chan *host.ScanReport, error) {
 	s.log.Printf("Using device %v", s.device)
 
 	raw, err := hci.Raw(s.device)
@@ -173,6 +97,7 @@ func (s *Scanner) startScanning() (chan *host.ScanReport, error) {
 		return nil, fmt.Errorf("Unable to start scanning: %v", err)
 	}
 
+	// scan loop
 	go func() {
 		<-s.quit
 		s.log.Print("Stopping scan")
@@ -181,8 +106,18 @@ func (s *Scanner) startScanning() (chan *host.ScanReport, error) {
 			s.log.Printf("failed to stop scanning: %v", err)
 		}
 		host.Deinit()
-		for range s.quit {
-		}
+		close(s.quit)
 	}()
 	return reportChan, nil
+}
+
+func (s *Scanner) Shutdown() {
+	s.log.Print("Requesting to stop scan")
+
+	select {
+	case s.quit <- struct{}{}:
+	default:
+	}
+
+	<-s.quit
 }

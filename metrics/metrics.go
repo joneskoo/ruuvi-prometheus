@@ -3,7 +3,6 @@
 package metrics
 
 import (
-	"github.com/joneskoo/ruuvi-prometheus/bluetooth"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
@@ -45,14 +44,36 @@ var (
 	}, []string{"device"})
 )
 
-func ObserveRuuvi(o bluetooth.RuuviReading) {
-	ruuviFrames.WithLabelValues(o.Address).Inc()
-	signalRSSI.WithLabelValues(o.Address).Set(o.RSSI)
-	voltage.WithLabelValues(o.Address).Set(o.Voltage)
-	pressure.WithLabelValues(o.Address).Set(o.Pressure)
-	temperature.WithLabelValues(o.Address).Set(o.Temperature)
-	humidity.WithLabelValues(o.Address).Set(o.Humidity)
-	acceleration.WithLabelValues(o.Address, "X").Set(o.AccelerationX)
-	acceleration.WithLabelValues(o.Address, "Y").Set(o.AccelerationY)
-	acceleration.WithLabelValues(o.Address, "Z").Set(o.AccelerationZ)
+func ObserveRuuvi(o RuuviReading) {
+	addr := o.Address()
+	ruuviFrames.WithLabelValues(addr).Inc()
+	signalRSSI.WithLabelValues(addr).Set(o.RSSI())
+	voltage.WithLabelValues(addr).Set(o.Voltage())
+	pressure.WithLabelValues(addr).Set(o.Pressure())
+	temperature.WithLabelValues(addr).Set(o.Temperature())
+	humidity.WithLabelValues(addr).Set(o.Humidity())
+	acceleration.WithLabelValues(addr, "X").Set(o.AccelerationX())
+	acceleration.WithLabelValues(addr, "Y").Set(o.AccelerationY())
+	acceleration.WithLabelValues(addr, "Z").Set(o.AccelerationZ())
+}
+
+type RuuviReading interface {
+	// Address is the sensor Bluetooth address.
+	Address() string
+	// RSSI is the received signal strength in dBm.
+	RSSI() float64
+	// Humidity is the measured relative humidity 0..1.
+	Humidity() float64
+	// Temperature is the measured temperature in °C.
+	Temperature() float64
+	// Pressure is the air pressure in hPa.
+	Pressure() float64
+	// AccelerationX is the acceleration sensor X axis reading in g.
+	AccelerationX() float64
+	// AccelerationY is the acceleration sensor Y axis reading in g.
+	AccelerationY() float64
+	// AccelerationZ is the acceleration sensor Z axis reading in g.
+	AccelerationZ() float64
+	// Voltage is the sensor battery voltage in Volts.
+	Voltage() float64
 }
