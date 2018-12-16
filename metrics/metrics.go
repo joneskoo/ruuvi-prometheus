@@ -3,6 +3,9 @@
 package metrics
 
 import (
+	"sync"
+	"time"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
@@ -44,8 +47,23 @@ var (
 	}, []string{"device"})
 )
 
+// ttl is the duration after which sensors are forgotten if signal is lost.
+const ttl = 1 * time.Minute
+
+var deviceLastSeen map[string]time.Time
+var mu sync.Mutex
+
+func init() {
+	deviceLastSeen = make(map[string]time.Time)
+}
+
 func ObserveRuuvi(o RuuviReading) {
 	addr := o.Address()
+
+	mu.Lock()
+	deviceLastSeen[addr] = time.Now()
+	mu.Unlock()
+
 	ruuviFrames.WithLabelValues(addr).Inc()
 	signalRSSI.WithLabelValues(addr).Set(o.RSSI())
 	voltage.WithLabelValues(addr).Set(o.Voltage())
@@ -55,6 +73,30 @@ func ObserveRuuvi(o RuuviReading) {
 	acceleration.WithLabelValues(addr, "X").Set(o.AccelerationX())
 	acceleration.WithLabelValues(addr, "Y").Set(o.AccelerationY())
 	acceleration.WithLabelValues(addr, "Z").Set(o.AccelerationZ())
+}
+
+func ClearExpired() {
+	mu.Lock()
+	defer mu.Unlock()
+
+	// log.Println("Checking for expired devices")
+	now := time.Now()
+	for addr, ls := range deviceLastSeen {
+		if now.Sub(ls) > ttl {
+			// log.Printf("%v expired", addr)
+			ruuviFrames.DeleteLabelValues(addr)
+			signalRSSI.DeleteLabelValues(addr)
+			voltage.DeleteLabelValues(addr)
+			pressure.DeleteLabelValues(addr)
+			temperature.DeleteLabelValues(addr)
+			humidity.DeleteLabelValues(addr)
+			acceleration.DeleteLabelValues(addr, "X")
+			acceleration.DeleteLabelValues(addr, "Y")
+			acceleration.DeleteLabelValues(addr, "Z")
+
+			delete(deviceLastSeen, addr)
+		}
+	}
 }
 
 type RuuviReading interface {

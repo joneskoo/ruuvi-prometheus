@@ -14,6 +14,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/joneskoo/ruuvi-prometheus/bluetooth"
 	"github.com/joneskoo/ruuvi-prometheus/metrics"
@@ -63,16 +64,28 @@ func main() {
 			errCh <- err
 		}
 
-		for sr := range scanResults {
-			for _, ads := range sr.Data {
-				ruuviData, err := ruuvi.Unmarshall(ads.Data)
-				if err != nil {
-					log.Printf("Unable to parse ruuvi data: %v", err)
-					continue
+		checkExpired := time.Tick(time.Minute)
+
+	receiveLoop:
+		for {
+			select {
+			case sr, ok := <-scanResults:
+				if !ok {
+					break receiveLoop
 				}
 
-				reading := ruuviReading{sr, ruuviData}
-				metrics.ObserveRuuvi(reading)
+				for _, ads := range sr.Data {
+					ruuviData, err := ruuvi.Unmarshall(ads.Data)
+					if err != nil {
+						log.Printf("Unable to parse ruuvi data: %v", err)
+						continue
+					}
+
+					reading := ruuviReading{sr, ruuviData}
+					metrics.ObserveRuuvi(reading)
+				}
+			case <-checkExpired:
+				metrics.ClearExpired()
 			}
 		}
 		log.Print("End of receive loop")
