@@ -1,0 +1,12 @@
+#!/sbin/openrc-run
+
+name="${RC_SVCNAME}"
+command="/usr/bin/btattach"
+command_args="-B /dev/ttyAMA0 -P bcm -S 3000000"
+pidfile="/var/run/${RC_SVCNAME}.pid"
+start_stop_daemon_args="--background --make-pidfile"
+
+
+depend() {
+	after coldplug
+}

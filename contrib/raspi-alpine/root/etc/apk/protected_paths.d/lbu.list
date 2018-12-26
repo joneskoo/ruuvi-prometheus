@@ -1,0 +1,6 @@
++etc/init.d/ruuvi-prometheus
++etc/init.d/bluetooth-bcm
++etc/runlevels/boot/bluetooth-bcm
++etc/runlevels/default/ruuvi-prometheus
++usr/local/bin/ruuvi-prometheus
++root/.ssh
