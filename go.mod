@@ -1,7 +1,5 @@
 module github.com/joneskoo/ruuvi-prometheus
 
-replace github.com/jtaimisto/bluewalker/hci => /Users/joneskoo/git/bluewalker/hci
-
 require (
 	github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973 // indirect
 	github.com/gogo/protobuf v1.1.1 // indirect
