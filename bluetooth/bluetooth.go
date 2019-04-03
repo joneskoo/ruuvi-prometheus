@@ -39,10 +39,11 @@ import (
 
 // Scanner scans for Bluetooth LE advertisements.
 type Scanner struct {
-	device  string
-	active  bool
-	filters []filter.AdFilter
-	log     Logger
+	device   string
+	active   bool
+	filters  []filter.AdFilter
+	log      Logger
+	handlers []AdvertisementHandler
 
 	quit chan struct{}
 }
@@ -78,37 +79,51 @@ func filterVendorIsRuuvi() []filter.AdFilter {
 	return []filter.AdFilter{flt}
 }
 
-func (s *Scanner) Scan() (<-chan *host.ScanReport, error) {
+type AdvertisementHandler func(*host.ScanReport)
+
+func (s *Scanner) Scan() error {
 	s.log.Printf("Using device %v", s.device)
 
 	raw, err := hci.Raw(s.device)
 	if err != nil {
-		return nil, fmt.Errorf(`Error while opening RAW HCI socket: %v
+		return fmt.Errorf(`Error while opening RAW HCI socket: %v
 	Are you running as root and have you run sudo hciconfig %s down?`, err, s.device)
 	}
 
 	host := host.New(raw)
 	if err = host.Init(); err != nil {
-		return nil, fmt.Errorf("Unable to initialize host: %v", err)
+		return fmt.Errorf("Unable to initialize host: %v", err)
 	}
 
 	reportChan, err := host.StartScanning(s.active, s.filters)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to start scanning: %v", err)
+		return fmt.Errorf("Unable to start scanning: %v", err)
 	}
 
-	// scan loop
-	go func() {
-		<-s.quit
-		s.log.Print("Stopping scan")
-		err := host.StopScanning()
-		if err != nil {
-			s.log.Printf("failed to stop scanning: %v", err)
+receiveLoop:
+	for {
+		select {
+		case sr := <-reportChan:
+			for _, handle := range s.handlers {
+				go handle(sr)
+			}
+		case <-s.quit:
+			s.log.Print("Stopping scan")
+			break receiveLoop
 		}
-		host.Deinit()
-		close(s.quit)
-	}()
-	return reportChan, nil
+	}
+
+	err = host.StopScanning()
+	if err != nil {
+		s.log.Printf("failed to stop scanning: %v", err)
+	}
+	host.Deinit()
+	close(s.quit)
+	return err
+}
+
+func (s *Scanner) HandleAdvertisement(h AdvertisementHandler) {
+	s.handlers = append(s.handlers, h)
 }
 
 func (s *Scanner) Shutdown() {

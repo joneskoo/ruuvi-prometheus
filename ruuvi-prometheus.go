@@ -58,37 +58,17 @@ func main() {
 	}()
 
 	// Bluetooth scanner
+	scanner.HandleAdvertisement(handleRuuviAdvertisement)
+	err := scanner.Scan()
+	if err != nil {
+		errCh <- err
+	}
+
+	// Expire metrics unless receiving data once per minute
 	go func() {
-		scanResults, err := scanner.Scan()
-		if err != nil {
-			errCh <- err
+		for range time.Tick(time.Minute) {
+			metrics.ClearExpired()
 		}
-
-		checkExpired := time.Tick(time.Minute)
-
-	receiveLoop:
-		for {
-			select {
-			case sr, ok := <-scanResults:
-				if !ok {
-					break receiveLoop
-				}
-
-				for _, ads := range sr.Data {
-					ruuviData, err := ruuvi.Unmarshall(ads.Data)
-					if err != nil {
-						log.Printf("Unable to parse ruuvi data: %v", err)
-						continue
-					}
-
-					reading := ruuviReading{sr, ruuviData}
-					metrics.ObserveRuuvi(reading)
-				}
-			case <-checkExpired:
-				metrics.ClearExpired()
-			}
-		}
-		log.Print("End of receive loop")
 	}()
 
 	exitCode := 0
@@ -112,6 +92,19 @@ func getDebugLogger(debug bool) *log.Logger {
 		output = ioutil.Discard
 	}
 	return log.New(output, "DEBUG: ", log.LstdFlags)
+}
+
+func handleRuuviAdvertisement(sr *host.ScanReport) {
+	for _, ads := range sr.Data {
+		ruuviData, err := ruuvi.Unmarshall(ads.Data)
+		if err != nil {
+			log.Printf("Unable to parse ruuvi data: %v", err)
+			continue
+		}
+
+		reading := ruuviReading{sr, ruuviData}
+		metrics.ObserveRuuvi(reading)
+	}
 }
 
 type ruuviReading struct {
