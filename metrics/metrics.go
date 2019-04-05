@@ -55,6 +55,12 @@ var mu sync.Mutex
 
 func init() {
 	deviceLastSeen = make(map[string]time.Time)
+
+	go func() {
+		for range time.Tick(time.Minute) {
+			clearExpired()
+		}
+	}()
 }
 
 func ObserveRuuvi(o RuuviReading) {
@@ -75,7 +81,7 @@ func ObserveRuuvi(o RuuviReading) {
 	acceleration.WithLabelValues(addr, "Z").Set(o.AccelerationZ())
 }
 
-func ClearExpired() {
+func clearExpired() {
 	mu.Lock()
 	defer mu.Unlock()
 

@@ -14,7 +14,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/joneskoo/ruuvi-prometheus/bluetooth"
 	"github.com/joneskoo/ruuvi-prometheus/metrics"
@@ -63,13 +62,6 @@ func main() {
 	if err != nil {
 		errCh <- err
 	}
-
-	// Expire metrics unless receiving data once per minute
-	go func() {
-		for range time.Tick(time.Minute) {
-			metrics.ClearExpired()
-		}
-	}()
 
 	exitCode := 0
 	select {
