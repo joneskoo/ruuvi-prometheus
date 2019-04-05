@@ -80,7 +80,7 @@ func main() {
 		exitCode = 1
 	}
 
-	scanner.Shutdown()
+	// scanner.Shutdown()
 	server.Shutdown(context.TODO())
 
 	os.Exit(exitCode)
