@@ -45,6 +45,26 @@ var (
 		Name: "ruuvi_rssi_dbm",
 		Help: "Ruuvi tag received signal strength RSSI",
 	}, []string{"device"})
+
+	format = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "ruuvi_format",
+		Help: "Ruuvi frame format version (e.g. 3 or 5)",
+	}, []string{"device"})
+
+	txPower = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "ruuvi_txpower_dbm",
+		Help: "Ruuvi transmit power in dBm",
+	}, []string{"device"})
+
+	moveCount = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "ruuvi_movecount_total",
+		Help: "Ruuvi movement counter",
+	}, []string{"device"})
+
+	seqno = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "ruuvi_seqno_current",
+		Help: "Ruuvi frame sequence number",
+	}, []string{"device"})
 )
 
 // ttl is the duration after which sensors are forgotten if signal is lost.
@@ -79,6 +99,10 @@ func ObserveRuuvi(o RuuviReading) {
 	acceleration.WithLabelValues(addr, "X").Set(o.AccelerationX())
 	acceleration.WithLabelValues(addr, "Y").Set(o.AccelerationY())
 	acceleration.WithLabelValues(addr, "Z").Set(o.AccelerationZ())
+	format.WithLabelValues(addr).Set(float64(o.DataFormat()))
+	txPower.WithLabelValues(addr).Set(float64(o.TxPower()))
+	moveCount.WithLabelValues(addr).Set(float64(o.MoveCount()))
+	seqno.WithLabelValues(addr).Set(float64(o.Seqno()))
 }
 
 func clearExpired() {
@@ -99,6 +123,10 @@ func clearExpired() {
 			acceleration.DeleteLabelValues(addr, "X")
 			acceleration.DeleteLabelValues(addr, "Y")
 			acceleration.DeleteLabelValues(addr, "Z")
+			format.DeleteLabelValues(addr)
+			txPower.DeleteLabelValues(addr)
+			moveCount.DeleteLabelValues(addr)
+			seqno.DeleteLabelValues(addr)
 
 			delete(deviceLastSeen, addr)
 		}
@@ -124,4 +152,9 @@ type RuuviReading interface {
 	AccelerationZ() float64
 	// Voltage is the sensor battery voltage in Volts.
 	Voltage() float64
+	// DataFormat is the version of the Ruuvi protocol
+	DataFormat() int
+	TxPower() int
+	MoveCount() int
+	Seqno() int
 }

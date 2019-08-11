@@ -113,3 +113,14 @@ func (r ruuviReading) AccelerationX() float64 { return float64(r.data.Accelerati
 func (r ruuviReading) AccelerationY() float64 { return float64(r.data.AccelerationY) }
 func (r ruuviReading) AccelerationZ() float64 { return float64(r.data.AccelerationZ) }
 func (r ruuviReading) Voltage() float64       { return float64(r.data.Voltage) / 1000 }
+func (r ruuviReading) TxPower() int           { return r.data.TxPower }
+func (r ruuviReading) MoveCount() int         { return r.data.MoveCount }
+func (r ruuviReading) Seqno() int             { return r.data.Seqno }
+func (r ruuviReading) DataFormat() int {
+	switch {
+	case r.data.TxPower == ruuvi.TxPowerNA && r.data.MoveCount == ruuvi.MoveCountNA && r.data.Seqno == ruuvi.SeqnoNA:
+		return 3
+	default:
+		return 5
+	}
+}

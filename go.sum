@@ -16,7 +16,11 @@ github.com/prometheus/procfs v0.0.0-20181129180645-aa55a523dc0a h1:Z2GBQ7wAiTCix
 github.com/prometheus/procfs v0.0.0-20181129180645-aa55a523dc0a/go.mod h1:c3At6R/oaqEKCNdg8wHV1ftS6bRYblBhIjjI8uT2IGk=
 gitlab.com/jtaimisto/bluewalker v0.2.0 h1:7WktcQlxWPjRSJ3S+R7mXBPjNDL57rNQKvrV0zNYZvs=
 gitlab.com/jtaimisto/bluewalker v0.2.0/go.mod h1:2/uXYQ/wPSc3yrYKEPlSNQdQqC2372LrruwIfiCUJVs=
+gitlab.com/jtaimisto/bluewalker v0.2.1 h1:6Z8tK6MPBUn94e4vKEp4EEa16W45f01DZIlT0pYIfJk=
+gitlab.com/jtaimisto/bluewalker v0.2.1/go.mod h1:2/uXYQ/wPSc3yrYKEPlSNQdQqC2372LrruwIfiCUJVs=
 golang.org/x/sync v0.0.0-20181108010431-42b317875d0f h1:Bl/8QSvNqXvPGPGXa2z5xUTmV7VDcZyvRZ+QQXkXTZQ=
 golang.org/x/sync v0.0.0-20181108010431-42b317875d0f/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sys v0.0.0-20181128092732-4ed8d59d0b35 h1:YAFjXN64LMvktoUZH9zgY4lGc/msGN7HQfoSuKCgaDU=
 golang.org/x/sys v0.0.0-20181128092732-4ed8d59d0b35/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
+golang.org/x/sys v0.0.0-20190804053845-51ab0e2deafa h1:KIDDMLT1O0Nr7TSxp8xM5tJcdn8tgyAONntO829og1M=
+golang.org/x/sys v0.0.0-20190804053845-51ab0e2deafa/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=

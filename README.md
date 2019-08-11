@@ -26,6 +26,18 @@ Ruuvi version 3 data format Bluetooth LE advertisements.
 
   <dt>ruuvi_temperature_celsius</dt>
   <dd>Ruuvi tag sensor temperature</dd>
+
+  <dt>ruuvi_format</dt>
+  <dd>Ruuvi frame format version (e.g. 3 or 5)</dd>
+
+  <dt>ruuvi_movecount_total</dt>
+  <dd>Ruuvi movement counter</dd>
+
+  <dt>ruuvi_seqno_current</dt>
+  <dd>Ruuvi frame sequence number</dd>
+
+  <dt>ruuvi_txpower_dbm</dt>
+  <dd>Ruuvi transmit power in dBm</dd>
 </dl>
 
 ## System requirements

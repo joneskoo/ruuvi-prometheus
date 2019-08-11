@@ -9,6 +9,7 @@ require (
 	github.com/prometheus/client_model v0.0.0-20180712105110-5c3871d89910 // indirect
 	github.com/prometheus/common v0.0.0-20181126121408-4724e9255275 // indirect
 	github.com/prometheus/procfs v0.0.0-20181129180645-aa55a523dc0a // indirect
-	gitlab.com/jtaimisto/bluewalker v0.2.0
+	gitlab.com/jtaimisto/bluewalker v0.2.1
 	golang.org/x/sync v0.0.0-20181108010431-42b317875d0f // indirect
+	golang.org/x/sys v0.0.0-20190804053845-51ab0e2deafa // indirect
 )
