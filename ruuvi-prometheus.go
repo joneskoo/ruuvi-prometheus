@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 
 	"github.com/joneskoo/ruuvi-prometheus/bluetooth"
 	"github.com/joneskoo/ruuvi-prometheus/metrics"
@@ -45,18 +46,23 @@ func main() {
 	})
 
 	shutdownDone := make(chan struct{})
+	var shutdownOnce sync.Once
+	shutdown := func() {
+		shutdownOnce.Do(func() {
+			if err := server.Shutdown(context.Background()); err != nil {
+				log.Printf("HTTP server Shutdown: %v", err)
+			}
+
+			scanner.Shutdown()
+			close(shutdownDone)
+		})
+	}
+
 	go func() {
 		sigint := make(chan os.Signal, 1)
 		signal.Notify(sigint, os.Interrupt)
 		<-sigint
-
-		if err := server.Shutdown(context.Background()); err != nil {
-			log.Printf("HTTP server Shutdown: %v", err)
-		}
-
-		scanner.Shutdown()
-
-		close(shutdownDone)
+		shutdown()
 	}()
 
 	// HTTP listener
@@ -64,6 +70,7 @@ func main() {
 		if err := server.ListenAndServe(); err != http.ErrServerClosed {
 			log.Printf("HTTP server ListenAndServe: %v", err)
 		}
+		shutdown()
 	}()
 
 	// Bluetooth scanner
@@ -73,6 +80,7 @@ func main() {
 		if err != nil {
 			log.Printf("Bluetooth scanner Scan: %v", err)
 		}
+		shutdown()
 	}()
 
 	<-shutdownDone
