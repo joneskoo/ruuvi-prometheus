@@ -6,14 +6,12 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
-	"syscall"
 
 	"github.com/joneskoo/ruuvi-prometheus/bluetooth"
 	"github.com/joneskoo/ruuvi-prometheus/metrics"
@@ -46,36 +44,38 @@ func main() {
 		Logger: getDebugLogger(cmdline.debug),
 	})
 
-	terminate := make(chan os.Signal, 1)
-	errCh := make(chan error, 1)
-	signal.Notify(terminate, syscall.SIGTERM, syscall.SIGINT)
+	shutdownDone := make(chan struct{})
+	go func() {
+		sigint := make(chan os.Signal, 1)
+		signal.Notify(sigint, os.Interrupt)
+		<-sigint
+
+		if err := server.Shutdown(context.Background()); err != nil {
+			log.Printf("HTTP server Shutdown: %v", err)
+		}
+
+		scanner.Shutdown()
+
+		close(shutdownDone)
+	}()
 
 	// HTTP listener
 	go func() {
-		err := server.ListenAndServe()
-		errCh <- err
+		if err := server.ListenAndServe(); err != http.ErrServerClosed {
+			log.Printf("HTTP server ListenAndServe: %v", err)
+		}
 	}()
 
 	// Bluetooth scanner
-	scanner.HandleAdvertisement(handleRuuviAdvertisement)
-	err := scanner.Scan()
-	if err != nil {
-		errCh <- err
-	}
+	go func() {
+		scanner.HandleAdvertisement(handleRuuviAdvertisement)
+		err := scanner.Scan()
+		if err != nil {
+			log.Printf("Bluetooth scanner Scan: %v", err)
+		}
+	}()
 
-	exitCode := 0
-	select {
-	case sig := <-terminate:
-		fmt.Fprintf(os.Stderr, "Exiting on signal %v\n", sig)
-	case err := <-errCh:
-		fmt.Fprintf(os.Stderr, "Exiting on error: %v\n", err)
-		exitCode = 1
-	}
-
-	// scanner.Shutdown()
-	server.Shutdown(context.TODO())
-
-	os.Exit(exitCode)
+	<-shutdownDone
 }
 
 func getDebugLogger(debug bool) *log.Logger {

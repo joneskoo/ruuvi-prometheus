@@ -31,6 +31,7 @@ package bluetooth
 
 import (
 	"fmt"
+	"sync"
 
 	"gitlab.com/jtaimisto/bluewalker/filter"
 	"gitlab.com/jtaimisto/bluewalker/hci"
@@ -45,7 +46,8 @@ type Scanner struct {
 	log      Logger
 	handlers []AdvertisementHandler
 
-	quit chan struct{}
+	quitOnce sync.Once
+	quit     chan struct{}
 }
 
 type ScannerOpts struct {
@@ -108,17 +110,18 @@ receiveLoop:
 				go handle(sr)
 			}
 		case <-s.quit:
-			s.log.Print("Stopping scan")
 			break receiveLoop
 		}
 	}
 
+	s.log.Print("Requesting to stop scan")
 	err = host.StopScanning()
 	if err != nil {
 		s.log.Printf("failed to stop scanning: %v", err)
 	}
 	host.Deinit()
-	close(s.quit)
+
+	s.Shutdown()
 	return err
 }
 
@@ -127,12 +130,8 @@ func (s *Scanner) HandleAdvertisement(h AdvertisementHandler) {
 }
 
 func (s *Scanner) Shutdown() {
-	s.log.Print("Requesting to stop scan")
+	s.quitOnce.Do(func() {
+		close(s.quit)
+	})
 
-	select {
-	case s.quit <- struct{}{}:
-	default:
-	}
-
-	<-s.quit
 }
