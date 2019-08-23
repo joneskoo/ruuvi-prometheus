@@ -7,14 +7,14 @@ pkgdesc="Ruuvi sensor Prometheus exporter"
 url="https://github.com/joneskoo/ruuvi-prometheus"
 arch="all"
 depends="bluez"
-license="unknown"
+license="BSD-2-Clause"
 options="!check"  # No test suite
 depends=""
 makedepends="go"
 install=""
 #subpackages="$pkgname-dev $pkgname-doc"
 
-source="$pkgname-$pkgver.tar.gz::https://github.com/joneskoo/ruuvi-prometheus/archive/v0.0.1.tar.gz
+source="$pkgname-$pkgver.tar.gz::https://github.com/joneskoo/ruuvi-prometheus/archive/v$pkgver.tar.gz
         ruuvi-prometheus.initd
         "
 builddir="$srcdir/$pkgname-$pkgver"
