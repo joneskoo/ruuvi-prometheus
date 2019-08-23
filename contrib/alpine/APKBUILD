@@ -12,7 +12,7 @@ options="!check"  # No test suite
 depends=""
 makedepends="go"
 install=""
-#subpackages="$pkgname-dev $pkgname-doc"
+subpackages="$pkgname-openrc"
 
 source="$pkgname-$pkgver.tar.gz::https://github.com/joneskoo/ruuvi-prometheus/archive/v$pkgver.tar.gz
         ruuvi-prometheus.initd
