@@ -45,12 +45,17 @@ const (
 	// defaultListen is the Prometheus metrics port.
 	// Allocated in https://github.com/prometheus/prometheus/wiki/Default-port-allocations
 	defaultListen = ":9521"
+
+	// commandName is the name of this command used in help texts.
+	commandName = "ruuvi-prometheus"
 )
+
+var version = ""
 
 func main() {
 	cmdline := parseSettings()
 
-	log.Printf("ruuvi-prometheus listening on %v", cmdline.listen)
+	log.Printf("%s %s listening on %v", commandName, version, cmdline.listen)
 
 	if !cmdline.debug {
 		// FIXME: bluewalker outputs to global logger so we need to discard all log globally

@@ -27,6 +27,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
+	"runtime"
 )
 
 type settings struct {
@@ -38,11 +40,20 @@ type settings struct {
 func parseSettings() (cmdline settings) {
 	cmdline.device = "hci0"
 	device := deviceFlag{&cmdline.device}
+	versionFlag := flag.Bool("version", false, "Show version number and quit")
 	flag.Var(device, "device", "HCI device to use")
 	flag.BoolVar(&cmdline.debug, "debug", false, "Debug output")
 	flag.StringVar(&cmdline.listen, "listen", defaultListen, "Listen address for Prometheus metrics")
 	flag.Parse()
+	if *versionFlag {
+		printVersion()
+	}
 	return cmdline
+}
+
+func printVersion() {
+	fmt.Printf("%s %s (%s/%s %s)\n", commandName, version, runtime.GOOS, runtime.GOARCH, runtime.Version())
+	os.Exit(0)
 }
 
 type deviceFlag struct{ value *string }
