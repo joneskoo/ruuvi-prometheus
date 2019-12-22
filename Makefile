@@ -2,7 +2,7 @@ VERSION=$(shell git describe --tags)
 
 # DEPLOYTO must be set to hostname to deploy by ssh.
 DEPLOYBINARY=ruuvi-prometheus.armv6-unknown-linux
-DEPLOYPATH=/usr/local/bin/ruuvi-prometheus
+DEPLOYPATH=/usr/bin/ruuvi-prometheus
 PREFIX = /usr/local
 
 .PHONY: ruuvi-prometheus
