@@ -1,0 +1,10 @@
+[Unit]
+Description=Ruuvi sensor Prometheus exporter
+
+[Service]
+User=ruuvi
+ExecStart=/usr/local/bin/ruuvi-prometheus #-debug
+AmbientCapabilities=CAP_NET_ADMIN CAP_NET_RAW
+
+[Install]
+WantedBy=multi-user.target
