@@ -17,6 +17,8 @@ Raspberry Pi Bluetooth to work.
 
 The service binds listen address to `:9521` by default.
 
+For usage with Grafana, see [grafana-example-dashboard.json](./grafana-example-dashboard.json).
+
 ## Further development
 
 Ideally I would like to run this using [gokrazy] instead, but
