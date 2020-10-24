@@ -19,6 +19,35 @@ The service binds listen address to `:9521` by default.
 
 For usage with Grafana, see [grafana-example-dashboard.json](./grafana-example-dashboard.json).
 
+To keep the exporter stateless (I run it on a headless read-only Raspberry),
+it is better to add the logical names for sensors in Prometheus configuration.
+For example:
+
+```yaml
+  - job_name: 'ruuvi-prometheus'
+    static_configs:
+      - targets: ['ruuvi-prometheus:9521']
+    metric_relabel_configs:
+      # ... id and name relabel config for each sensor
+      - source_labels: ['device']
+        target_label: 'id'
+        regex: 'e7:37:3b:37:d9:74'
+        replacement: '2'
+      - source_labels: ['id']
+        target_label: 'name'
+        regex: '2'
+        replacement: 'garage'
+      # Map location based on id
+      - source_labels: ['id']
+        regex: '2|3|5|6|7|9'
+        target_label: 'location'
+        replacement: 'indoors'
+      - source_labels: ['id']
+        regex: '1|4'
+        target_label: 'location'
+        replacement: 'outdoors'
+```
+
 ## Further development
 
 Ideally I would like to run this using [gokrazy] instead, but
