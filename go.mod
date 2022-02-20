@@ -30,4 +30,6 @@ require (
 	golang.org/x/sys v0.0.0-20220209214540-3681064d5158 // indirect
 )
 
+replace gitlab.com/jtaimisto/bluewalker => gitlab.com/joneskoo/bluewalker v0.0.0-20220220125105-3bd9aa9b66df
+
 go 1.13

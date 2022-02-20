@@ -30,6 +30,8 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"gitlab.com/jtaimisto/bluewalker/host"
+	"gitlab.com/jtaimisto/bluewalker/ruuvi"
 )
 
 var (
@@ -106,25 +108,41 @@ func init() {
 }
 
 func ObserveRuuvi(o RuuviReading) {
-	addr := o.Address()
+	addr := o.Address.String()
 
 	mu.Lock()
 	deviceLastSeen[addr] = time.Now()
 	mu.Unlock()
 
 	ruuviFrames.WithLabelValues(addr).Inc()
-	signalRSSI.WithLabelValues(addr).Set(o.RSSI())
-	voltage.WithLabelValues(addr).Set(o.Voltage())
-	pressure.WithLabelValues(addr).Set(o.Pressure())
-	temperature.WithLabelValues(addr).Set(o.Temperature())
-	humidity.WithLabelValues(addr).Set(o.Humidity())
-	acceleration.WithLabelValues(addr, "X").Set(o.AccelerationX())
-	acceleration.WithLabelValues(addr, "Y").Set(o.AccelerationY())
-	acceleration.WithLabelValues(addr, "Z").Set(o.AccelerationZ())
+	signalRSSI.WithLabelValues(addr).Set(float64(o.Rssi))
+	if o.VoltageValid() {
+		voltage.WithLabelValues(addr).Set(float64(o.Voltage) / 1000)
+	}
+	if o.PressureValid() {
+		pressure.WithLabelValues(addr).Set(float64(o.Pressure) / 100)
+	}
+	if o.TemperatureValid() {
+		temperature.WithLabelValues(addr).Set(float64(o.Temperature))
+	}
+	if o.HumidityValid() {
+		humidity.WithLabelValues(addr).Set(float64(o.Humidity) / 100)
+	}
+	if o.AccelerationValid() {
+		acceleration.WithLabelValues(addr, "X").Set(float64(o.AccelerationX))
+		acceleration.WithLabelValues(addr, "Y").Set(float64(o.AccelerationY))
+		acceleration.WithLabelValues(addr, "Z").Set(float64(o.AccelerationZ))
+	}
 	format.WithLabelValues(addr).Set(float64(o.DataFormat()))
-	txPower.WithLabelValues(addr).Set(float64(o.TxPower()))
-	moveCount.WithLabelValues(addr).Set(float64(o.MoveCount()))
-	seqno.WithLabelValues(addr).Set(float64(o.Seqno()))
+	if o.TxPowerValid() {
+		txPower.WithLabelValues(addr).Set(float64(o.TxPower))
+	}
+	if o.MoveCountValid() {
+		moveCount.WithLabelValues(addr).Set(float64(o.MoveCount))
+	}
+	if o.SeqnoValid() {
+		seqno.WithLabelValues(addr).Set(float64(o.Seqno))
+	}
 }
 
 func clearExpired() {
@@ -155,28 +173,18 @@ func clearExpired() {
 	}
 }
 
-type RuuviReading interface {
-	// Address is the sensor Bluetooth address.
-	Address() string
-	// RSSI is the received signal strength in dBm.
-	RSSI() float64
-	// Humidity is the measured relative humidity 0..1.
-	Humidity() float64
-	// Temperature is the measured temperature in °C.
-	Temperature() float64
-	// Pressure is the air pressure in hPa.
-	Pressure() float64
-	// AccelerationX is the acceleration sensor X axis reading in g.
-	AccelerationX() float64
-	// AccelerationY is the acceleration sensor Y axis reading in g.
-	AccelerationY() float64
-	// AccelerationZ is the acceleration sensor Z axis reading in g.
-	AccelerationZ() float64
-	// Voltage is the sensor battery voltage in Volts.
-	Voltage() float64
-	// DataFormat is the version of the Ruuvi protocol
-	DataFormat() int
-	TxPower() int
-	MoveCount() int
-	Seqno() int
+type RuuviReading struct {
+	*host.ScanReport
+	*ruuvi.Data
+}
+
+// DataFormat guesses the Ruuvi protocol data format version. In case of
+// protocol version 3, tx power, movement counter and sequence number are
+// not valid. Otherwise guess version is 5.
+func (r RuuviReading) DataFormat() int {
+	if !r.TxPowerValid() && !r.MoveCountValid() && !r.SeqnoValid() {
+		return 3
+	} else {
+		return 5
+	}
 }

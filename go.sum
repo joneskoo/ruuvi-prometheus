@@ -256,6 +256,8 @@ github.com/tmc/grpc-websocket-proxy v0.0.0-20170815181823-89b8d40f7ca8/go.mod h1
 github.com/urfave/cli v1.20.0/go.mod h1:70zkFmudgCuE/ngEzBv17Jvp/497gISqfk5gWijbERA=
 github.com/urfave/cli v1.22.1/go.mod h1:Gos4lmkARVdJ6EkW0WaNv/tZAAMe9V7XWyB60NtXRu0=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
+gitlab.com/joneskoo/bluewalker v0.0.0-20220220125105-3bd9aa9b66df h1:T0UgIJ6PH57D9OFYzgoHJRcV6xIzb8XBh29i0HJApTw=
+gitlab.com/joneskoo/bluewalker v0.0.0-20220220125105-3bd9aa9b66df/go.mod h1:dQ1Et4ztySQfRp70HAnUdXyEPKBOd6D9XfJNSdQ9Xh0=
 gitlab.com/jtaimisto/bluewalker v0.2.4 h1:iKKA+oSACy6w4SGBO/jsRlgBSKeMF+S0qYgEaw3Sdok=
 gitlab.com/jtaimisto/bluewalker v0.2.4/go.mod h1:Wr/0/Ht+RNiOzCDCR7h70jSAmfksmxW1HIEkxNRE074=
 gitlab.com/jtaimisto/bluewalker v0.3.0 h1:JzCspfXVA0e/Ctv9idZc5QWKNQY38KR9t4QtgH3vp/o=
