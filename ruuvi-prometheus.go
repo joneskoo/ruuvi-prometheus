@@ -120,7 +120,7 @@ func handleRuuviAdvertisement(sr *host.ScanReport) {
 	for _, ads := range sr.Data {
 		ruuviData, err := ruuvi.Decode(ads.Data)
 		if err != nil {
-			log.Printf("Unable to parse ruuvi data: %v", err)
+			log.Printf("Unable to parse ruuvi data: %v; ads.Data=%x, len=%d, address=%x", err, ads.Data, len(ads.Data), sr.Address)
 			continue
 		}
 
