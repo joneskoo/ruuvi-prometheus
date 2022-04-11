@@ -106,6 +106,7 @@ func main() {
 	}
 
 	scanner.Shutdown()
+	os.Exit(1)
 }
 
 func getDebugLogger(debug bool) *log.Logger {
