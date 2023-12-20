@@ -39,7 +39,7 @@ type settings struct {
 
 func parseSettings() (cmdline settings) {
 	cmdline.device = "hci0"
-	device := deviceFlag{&cmdline.device}
+	device := &deviceFlag{&cmdline.device}
 	versionFlag := flag.Bool("version", false, "Show version number and quit")
 	flag.Var(device, "device", "HCI device to use")
 	flag.BoolVar(&cmdline.debug, "debug", false, "Debug output")
@@ -69,7 +69,7 @@ func (f deviceFlag) Get() string {
 	return *f.value
 }
 
-func (f deviceFlag) Set(value string) error {
+func (f *deviceFlag) Set(value string) error {
 	if value == "" {
 		return fmt.Errorf("missing device name")
 	}

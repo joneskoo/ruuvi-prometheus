@@ -88,18 +88,18 @@ func (s *Scanner) Scan() error {
 
 	raw, err := hci.Raw(s.device)
 	if err != nil {
-		return fmt.Errorf(`Error while opening RAW HCI socket: %v
+		return fmt.Errorf(`error while opening RAW HCI socket: %v
 	Are you running as root and have you run sudo hciconfig %s down?`, err, s.device)
 	}
 
 	host := host.New(raw)
 	if err = host.Init(); err != nil {
-		return fmt.Errorf("Unable to initialize host: %v", err)
+		return fmt.Errorf("unable to initialize host: %v", err)
 	}
 
 	reportChan, err := host.StartScanning(s.active, s.filters)
 	if err != nil {
-		return fmt.Errorf("Unable to start scanning: %v", err)
+		return fmt.Errorf("unable to start scanning: %v", err)
 	}
 
 receiveLoop:
