@@ -125,7 +125,7 @@ func handleRuuviAdvertisement(sr *host.ScanReport) {
 			continue
 		}
 
-		reading := metrics.RuuviReading{sr, ruuviData}
+		reading := metrics.RuuviReading{ScanReport: sr, Data: ruuviData}
 		metrics.ObserveRuuvi(reading)
 	}
 }
