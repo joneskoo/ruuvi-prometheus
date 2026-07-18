@@ -16,7 +16,7 @@ func handleAdvertisingReport(ch chan *ScanReport, filter filter.AdFilter, data [
 	}
 	for _, rep := range reports {
 		if filter != nil && !filter.Filter(rep) {
-			return nil
+			continue
 		}
 
 		scanReport := new(ScanReport)
