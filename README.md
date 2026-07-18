@@ -1,7 +1,11 @@
 # ruuvi-prometheus exporter
 
 This is a simple Prometheus exporter that exports metrics for
-Ruuvi version 3 data format Bluetooth LE advertisements.
+Ruuvi Bluetooth LE advertisements, data formats 3, 5 and 6.
+
+Data format 6 carries air quality measurements and is sent for example
+by Ruuvi Air. Air quality readings are not exported while the sensor
+reports calibration in progress; see the ruuvi_calibrating metric.
 
 ## Usage
 
@@ -93,7 +97,33 @@ can create Raspberry appliance image without any C code besides Linux.
 
   <dt>ruuvi_txpower_dbm</dt>
   <dd>Ruuvi transmit power in dBm</dd>
+
+  <dt>ruuvi_pm2_5_ug_m3</dt>
+  <dd>Ruuvi sensor PM2.5 particulate matter concentration</dd>
+
+  <dt>ruuvi_co2_ppm</dt>
+  <dd>Ruuvi sensor CO2 concentration</dd>
+
+  <dt>ruuvi_voc_index</dt>
+  <dd>Ruuvi sensor VOC (volatile organic compounds) index</dd>
+
+  <dt>ruuvi_nox_index</dt>
+  <dd>Ruuvi sensor NOx (nitrous oxides) index</dd>
+
+  <dt>ruuvi_luminosity_lux</dt>
+  <dd>Ruuvi sensor ambient light level</dd>
+
+  <dt>ruuvi_sound_avg_dba</dt>
+  <dd>Ruuvi sensor A-weighted average sound level</dd>
+
+  <dt>ruuvi_calibrating</dt>
+  <dd>1 while the Ruuvi sensor calibration is in progress</dd>
 </dl>
+
+Not every metric is available from every device — for example
+particulate matter, CO2, VOC and NOx readings are only present on
+devices using data format 6, and acceleration and battery voltage
+are only present on data formats 3 and 5.
 
 ## System requirements
 
