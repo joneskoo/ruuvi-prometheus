@@ -73,6 +73,11 @@ func (f *deviceFlag) Set(value string) error {
 	if value == "" {
 		return fmt.Errorf("missing device name")
 	}
-	f.value = &value
+	if f.value == nil {
+		f.value = new(string)
+	}
+	// Write through the pointer so the wrapped settings.device is updated;
+	// reassigning f.value would orphan it and silently drop the -device flag.
+	*f.value = value
 	return nil
 }
