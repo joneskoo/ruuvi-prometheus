@@ -1,26 +1,5 @@
-// Copyright (c) 2018, Joonas Kuorilehto
-// All rights reserved.
-//
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are met:
-//
-// 1. Redistributions of source code must retain the above copyright notice, this
-//    list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright notice,
-//    this list of conditions and the following disclaimer in the documentation
-//    and/or other materials provided with the distribution.
-//
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-// FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-// DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-// OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// SPDX-License-Identifier: BSD-2-Clause
+// Copyright (c) 2018- Joonas Kuorilehto
 
 // Command ruuvi-prometheus is a Prometheus exporter that listens to
 // Ruuvi sensor Bluetooth Low Energy beacons and exposes them as metrics.
@@ -35,10 +14,11 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/joneskoo/ruuvi-prometheus/bluetooth"
+	"github.com/joneskoo/ruuvi-prometheus/internal/bluetooth"
+	"github.com/joneskoo/ruuvi-prometheus/internal/filter"
+	"github.com/joneskoo/ruuvi-prometheus/internal/host"
+	"github.com/joneskoo/ruuvi-prometheus/internal/ruuvi"
 	"github.com/joneskoo/ruuvi-prometheus/metrics"
-	"gitlab.com/jtaimisto/bluewalker/host"
-	"gitlab.com/jtaimisto/bluewalker/ruuvi"
 )
 
 const (
@@ -58,7 +38,8 @@ func main() {
 	log.Printf("%s %s listening on %v", commandName, version, cmdline.listen)
 
 	if !cmdline.debug {
-		// FIXME: bluewalker outputs to global logger so we need to discard all log globally
+		// The vendored BLE stack (internal/) logs through the standard
+		// global logger, so silence it globally unless -debug is set.
 		log.SetOutput(ioutil.Discard)
 	}
 
@@ -67,8 +48,9 @@ func main() {
 		Handler: metrics.Handler,
 	}
 	scanner := bluetooth.New(bluetooth.ScannerOpts{
-		Device: cmdline.device,
-		Logger: getDebugLogger(cmdline.debug),
+		Device:  cmdline.device,
+		Logger:  getDebugLogger(cmdline.debug),
+		Filters: []filter.AdFilter{ruuviAdFilter()},
 	})
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -115,6 +97,17 @@ func getDebugLogger(debug bool) *log.Logger {
 		output = ioutil.Discard
 	}
 	return log.New(output, "DEBUG: ", log.LstdFlags)
+}
+
+// ruuviAdFilter matches advertisements that carry Ruuvi manufacturer specific
+// data. This is where the generic BLE scanner and the Ruuvi domain are
+// combined: the scanner only knows about filters, and the Ruuvi identity comes
+// from the ruuvi package.
+func ruuviAdFilter() filter.AdFilter {
+	// Manufacturer specific data is prefixed with the company id in
+	// little-endian byte order.
+	preamble := []byte{byte(ruuvi.ManufacturerID & 0xff), byte(ruuvi.ManufacturerID >> 8)}
+	return filter.ByVendor(preamble)
 }
 
 func handleRuuviAdvertisement(sr *host.ScanReport) {

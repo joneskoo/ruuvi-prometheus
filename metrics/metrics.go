@@ -1,37 +1,17 @@
-// Copyright (c) 2018, Joonas Kuorilehto
-// All rights reserved.
-//
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are met:
-//
-// 1. Redistributions of source code must retain the above copyright notice, this
-//    list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright notice,
-//    this list of conditions and the following disclaimer in the documentation
-//    and/or other materials provided with the distribution.
-//
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-// FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-// DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-// OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// SPDX-License-Identifier: BSD-2-Clause
+// Copyright (c) 2018- Joonas Kuorilehto
 
 package metrics
 
 import (
+	"strconv"
 	"sync"
 	"time"
 
+	"github.com/joneskoo/ruuvi-prometheus/internal/host"
+	"github.com/joneskoo/ruuvi-prometheus/internal/ruuvi"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"gitlab.com/jtaimisto/bluewalker/host"
-	"gitlab.com/jtaimisto/bluewalker/ruuvi"
 )
 
 var (
@@ -70,10 +50,14 @@ var (
 		Help: "Ruuvi tag received signal strength RSSI",
 	}, []string{"device"})
 
-	format = promauto.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "ruuvi_format",
-		Help: "Ruuvi frame format version (e.g. 3, 5 or 6)",
-	}, []string{"device"})
+	// formatInfo is an info-style metric: the value is always 1 and the frame
+	// format version is carried in the "version" label. Encoding the version as
+	// a label rather than the metric value keeps it aggregatable/joinable and
+	// avoids the enum-as-value anti-pattern.
+	formatInfo = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "ruuvi_format_info",
+		Help: "Ruuvi frame format version; value is always 1, version is in the version label",
+	}, []string{"device", "version"})
 
 	txPower = promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "ruuvi_txpower_dbm",
@@ -81,8 +65,8 @@ var (
 	}, []string{"device"})
 
 	moveCount = promauto.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "ruuvi_movecount_total",
-		Help: "Ruuvi movement counter",
+		Name: "ruuvi_movement_count",
+		Help: "Ruuvi movement counter as reported by the sensor",
 	}, []string{"device"})
 
 	seqno = promauto.NewGaugeVec(prometheus.GaugeOpts{
@@ -133,7 +117,7 @@ var deviceVecs = []interface {
 	DeletePartialMatch(prometheus.Labels) int
 }{
 	ruuviFrames, humidity, temperature, pressure, acceleration, voltage,
-	signalRSSI, format, txPower, moveCount, seqno,
+	signalRSSI, formatInfo, txPower, moveCount, seqno,
 	pm25, co2, vocIndex, noxIndex, luminosity, soundAvg, calibrating,
 }
 
@@ -162,7 +146,7 @@ func ObserveRuuvi(o RuuviReading) {
 
 	ruuviFrames.WithLabelValues(addr).Inc()
 	signalRSSI.WithLabelValues(addr).Set(float64(o.Rssi))
-	format.WithLabelValues(addr).Set(float64(o.DataFormat))
+	formatInfo.WithLabelValues(addr, strconv.Itoa(int(o.DataFormat))).Set(1)
 
 	if o.VoltageValid() {
 		voltage.WithLabelValues(addr).Set(float64(o.Voltage) / 1000)

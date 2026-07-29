@@ -9,15 +9,9 @@ reports calibration in progress; see the ruuvi_calibrating metric.
 
 ## Usage
 
-I use ruuvi exporter with Alpine Linux myself and it’s on
-[Alpine Linux repository in edge/testing].
-
-To use this binary release, install Alpine edge and enable the testing
-repository and apk add ruuvi-prometheus.
-Enable service to start at booth with `rc-update add ruuvi-prometheus`.
-
-You will need to uncomment "rpi bluetooth" in /etc/mdev.conf for
-Raspberry Pi Bluetooth to work.
+I run this as a [gokrazy] appliance on a Raspberry Pi: add
+`github.com/joneskoo/ruuvi-prometheus` to your gokrazy instance's packages,
+alongside `github.com/gokrazy/bluetooth` for the BLE adapter.
 
 The service binds listen address to `:9521` by default.
 
@@ -52,16 +46,6 @@ For example:
         replacement: 'outdoors'
 ```
 
-## Further development
-
-Ideally I would like to run this using [gokrazy] instead, but
-my current setup requires WiFi with WPA2 and Raspberry Pi Bluetooth
-which are not supported yet. Once those blockers are solved, gokrazy
-can create Raspberry appliance image without any C code besides Linux.
-
-[Alpine Linux repository in edge/testing]: https://pkgs.alpinelinux.org/packages?name=ruuvi-prometheus&arch=armhf
-[gokrazy]: https://gokrazy.org/
-
 ## Exported metrics
 
 <dl>
@@ -86,11 +70,11 @@ can create Raspberry appliance image without any C code besides Linux.
   <dt>ruuvi_temperature_celsius</dt>
   <dd>Ruuvi tag sensor temperature</dd>
 
-  <dt>ruuvi_format</dt>
-  <dd>Ruuvi frame format version (e.g. 3 or 5)</dd>
+  <dt>ruuvi_format_info</dt>
+  <dd>Ruuvi frame format version; the value is always 1 and the version (3, 5 or 6) is carried in the <code>version</code> label</dd>
 
-  <dt>ruuvi_movecount_total</dt>
-  <dd>Ruuvi movement counter</dd>
+  <dt>ruuvi_movement_count</dt>
+  <dd>Ruuvi movement counter as reported by the sensor</dd>
 
   <dt>ruuvi_seqno_current</dt>
   <dd>Ruuvi frame sequence number</dd>
@@ -130,4 +114,18 @@ are only present on data formats 3 and 5.
 * Linux
 * Bluetooth LE; bluetoothd must not be running.
 
+The exporter is pure Go with no cgo: it talks to the controller over a raw
+HCI socket via `golang.org/x/sys`.
+
+## Acknowledgements and license
+
+The Bluetooth LE scanning stack and the Ruuvi frame decoder under `internal/`
+are a vendored fork of [bluewalker] by Jukka Taimisto, extended here with Ruuvi
+data format 6 support. The whole project is under the 2-clause BSD license (see
+`LICENSE`), which lists both copyright holders. Every source file carries an
+SPDX `BSD-2-Clause` identifier and per-file copyright notices recording its
+authorship — Jukka's for the forked code, and both holders' for files that mix
+his code with changes made here.
+
 [bluewalker]: https://gitlab.com/jtaimisto/bluewalker/
+[gokrazy]: https://gokrazy.org/
