@@ -81,5 +81,12 @@ extended here with Ruuvi data format 6 support. There is no external
   split: `filter` is generic AD filtering, `bluetooth` is a Ruuvi-agnostic
   scanner, Ruuvi specifics (ids, decoding) live in `internal/ruuvi`, and the
   combination of the two lives in `main`.
-- The fork carries bluewalker's 2-clause BSD license in `internal/LICENSE`.
-  Keep that file, and keep the upstream copyright headers in the forked source.
+- Licensing is per-file and self-describing: every source file starts with an
+  SPDX `BSD-2-Clause` identifier and copyright notices. Forked files carry
+  `Copyright (c) 2018 Jukka Taimisto`; files that mix his code with local
+  changes or code derived from bluewalker (e.g. `internal/ruuvi`,
+  `internal/host/adv.go`, `internal/bluetooth`) carry both his and
+  `Copyright (c) 2018- Joonas Kuorilehto`; wholly original files carry only the
+  latter. The single top-level `LICENSE` holds the full BSD-2 text and lists
+  both holders. When you add a new file, give it an SPDX header; when you edit
+  a forked file, add the second copyright line if it is not already there.

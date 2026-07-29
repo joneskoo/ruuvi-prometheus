@@ -1,7 +1,14 @@
 BSD 2-Clause License
 
-Copyright (c) 2018, Joonas Kuorilehto
+Copyright (c) 2018 Jukka Taimisto
+Copyright (c) 2018- Joonas Kuorilehto
 All rights reserved.
+
+The Bluetooth LE and Ruuvi packages under internal/ are derived from
+bluewalker (https://gitlab.com/jtaimisto/bluewalker) by Jukka Taimisto.
+Per-file SPDX-License-Identifier and copyright notices record the authorship
+of each file; both copyright holders license their work under the terms
+below.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:

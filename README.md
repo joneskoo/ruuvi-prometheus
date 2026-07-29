@@ -137,8 +137,10 @@ HCI socket via `golang.org/x/sys`.
 
 The Bluetooth LE scanning stack and the Ruuvi frame decoder under `internal/`
 are a vendored fork of [bluewalker] by Jukka Taimisto, extended here with Ruuvi
-data format 6 support. That code is used under the 2-clause BSD license (see
-`internal/LICENSE`); the rest of this repository is under its own license (see
-`LICENSE`).
+data format 6 support. The whole project is under the 2-clause BSD license (see
+`LICENSE`), which lists both copyright holders. Every source file carries an
+SPDX `BSD-2-Clause` identifier and per-file copyright notices recording its
+authorship — Jukka's for the forked code, and both holders' for files that mix
+his code with changes made here.
 
 [bluewalker]: https://gitlab.com/jtaimisto/bluewalker/

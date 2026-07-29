@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: BSD-2-Clause
+// Copyright (c) 2018 Jukka Taimisto
+// Copyright (c) 2018- Joonas Kuorilehto
+
 // Package ruuvi implements parsing for the vendor specific data sent by
 // Ruuvi tag. See https://github.com/ruuvi/ruuvi-sensor-protocols for details
 // of Ruuvi data protocols.
