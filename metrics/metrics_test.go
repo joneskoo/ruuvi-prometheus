@@ -3,6 +3,7 @@ package metrics
 import (
 	"encoding/hex"
 	"testing"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"gitlab.com/jtaimisto/bluewalker/hci"
@@ -82,6 +83,76 @@ func TestCalibrationGatesAirQuality(t *testing.T) {
 	// Environmental readings are exported also during calibration.
 	if got := testutil.ToFloat64(seqno.WithLabelValues(testAddr)); got != 142 {
 		t.Errorf("seqno = %v after calibrating frame, expected 142", got)
+	}
+}
+
+// v5Frame is the "vector 1 - v5" data-format-5 advertisement from the
+// bluewalker ruuvi test vectors: temperature 2.26, humidity 25.025 %,
+// pressure 101325 Pa, acceleration -1/-1/-1 g, voltage 3000 mV, tx power 4 dBm,
+// move count 100 and sequence number 1000.
+const v5Frame = "99040501c4271ac87dfc18fc18fc18af166403e8010203040506"
+
+// TestObserveFormat5 exercises the environmental/motion branches of ObserveRuuvi
+// that a data-format-6 (air) frame does not carry, and checks unit conversions.
+func TestObserveFormat5(t *testing.T) {
+	clearDevice(t)
+
+	ObserveRuuvi(reading(t, testAddr, v5Frame))
+
+	checks := []struct {
+		name   string
+		metric float64
+		want   float64
+	}{
+		{"temperature_celsius", testutil.ToFloat64(temperature.WithLabelValues(testAddr)), float64(float32(2.26))},
+		{"humidity_ratio", testutil.ToFloat64(humidity.WithLabelValues(testAddr)), float64(float32(25.025)) / 100},
+		{"pressure_hpa", testutil.ToFloat64(pressure.WithLabelValues(testAddr)), 1013.25},
+		{"battery_volts", testutil.ToFloat64(voltage.WithLabelValues(testAddr)), 3.0},
+		{"acceleration_x", testutil.ToFloat64(acceleration.WithLabelValues(testAddr, "X")), -1},
+		{"acceleration_y", testutil.ToFloat64(acceleration.WithLabelValues(testAddr, "Y")), -1},
+		{"acceleration_z", testutil.ToFloat64(acceleration.WithLabelValues(testAddr, "Z")), -1},
+		{"txpower_dbm", testutil.ToFloat64(txPower.WithLabelValues(testAddr)), 4},
+		{"movement_count", testutil.ToFloat64(moveCount.WithLabelValues(testAddr)), 100},
+		{"seqno", testutil.ToFloat64(seqno.WithLabelValues(testAddr)), 1000},
+		{"format_info_v5", testutil.ToFloat64(formatInfo.WithLabelValues(testAddr, "5")), 1},
+	}
+	for _, c := range checks {
+		if c.metric != c.want {
+			t.Errorf("%s = %v, want %v", c.name, c.metric, c.want)
+		}
+	}
+
+	// Air-quality metrics belong to format 6 only; no series may exist.
+	if got := testutil.CollectAndCount(co2); got != 0 {
+		t.Errorf("co2 has %d series, expected 0 for a format-5 frame", got)
+	}
+}
+
+// TestClearExpired verifies that a device whose last-seen time is older than the
+// TTL has all of its series removed.
+func TestClearExpired(t *testing.T) {
+	clearDevice(t)
+
+	ObserveRuuvi(reading(t, testAddr, v5Frame))
+	if got := testutil.CollectAndCount(temperature); got == 0 {
+		t.Fatal("expected a temperature series after observing a reading")
+	}
+
+	// Backdate the last-seen time beyond the TTL, then run the sweep.
+	mu.Lock()
+	deviceLastSeen[testAddr] = time.Now().Add(-2 * ttl)
+	mu.Unlock()
+
+	clearExpired()
+
+	if got := testutil.CollectAndCount(temperature); got != 0 {
+		t.Errorf("temperature has %d series after expiry, want 0", got)
+	}
+	mu.Lock()
+	_, stillTracked := deviceLastSeen[testAddr]
+	mu.Unlock()
+	if stillTracked {
+		t.Error("expired device still tracked in deviceLastSeen")
 	}
 }
 
