@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 
-	"gitlab.com/jtaimisto/bluewalker/logging"
+	"github.com/joneskoo/ruuvi-prometheus/internal/logging"
 )
 
 // Transport allows sending and receiving raw HCI packets
@@ -40,11 +40,11 @@ const (
 	HciEventPacket byte = 0x04
 )
 
-//AdvChannelMap defines the advertising channel(s) to use
+// AdvChannelMap defines the advertising channel(s) to use
 // See Bluetooth 5.0, vol 2, parth E, ch 7.8.5
 type AdvChannelMap int
 
-//Values for AdvChannelMap
+// Values for AdvChannelMap
 const (
 	AdvChannel37  AdvChannelMap = 0x01
 	AdvChannel38  AdvChannelMap = 0x01 << 1
@@ -52,10 +52,10 @@ const (
 	AdvChannelAll AdvChannelMap = (AdvChannel37 | AdvChannel38 | AdvChannel39)
 )
 
-//AdvFilterPolicy defines what scan and connection requests are accepted
+// AdvFilterPolicy defines what scan and connection requests are accepted
 type AdvFilterPolicy byte
 
-//Values for AdvFilterPolicy
+// Values for AdvFilterPolicy
 const (
 	//Scan and connection requests from all
 	ScanConnAll AdvFilterPolicy = 0x00
@@ -67,7 +67,7 @@ const (
 	ScanConnWhite = 0x03
 )
 
-//AdvAddressType defines values for 'Own Address Type' advertising parameter.
+// AdvAddressType defines values for 'Own Address Type' advertising parameter.
 // See Bluetooth 5.0, vol 2, part E, ch 7.8.5
 type AdvAddressType byte
 
@@ -118,12 +118,12 @@ func (adv AdvType) String() string {
 	}
 }
 
-//MarshalJSON marshals AdvType into JSON
+// MarshalJSON marshals AdvType into JSON
 func (adv AdvType) MarshalJSON() ([]byte, error) {
 	return json.Marshal(adv.String())
 }
 
-//UnmarshalJSON decodes the JSON encoded AdvertisingType
+// UnmarshalJSON decodes the JSON encoded AdvertisingType
 func (adv *AdvType) UnmarshalJSON(b []byte) error {
 
 	var str string
@@ -149,7 +149,7 @@ func (adv *AdvType) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-//AdvertisingParameters can be used to set advertising parameters for controller
+// AdvertisingParameters can be used to set advertising parameters for controller
 // See Bluetooth 5.0 vol 2, part E, ch 7.8.5
 type AdvertisingParameters struct {
 	IntervalMin  uint16
@@ -161,7 +161,7 @@ type AdvertisingParameters struct {
 	FilterPolicy AdvFilterPolicy
 }
 
-//DefaultAdvParameters returns AdvertisingParameters struct with all values set to defaults.
+// DefaultAdvParameters returns AdvertisingParameters struct with all values set to defaults.
 func DefaultAdvParameters() AdvertisingParameters {
 
 	return AdvertisingParameters{
@@ -174,8 +174,8 @@ func DefaultAdvParameters() AdvertisingParameters {
 	}
 }
 
-//AdvertisingReport represents data parsed from LE Advertising Report
-//Event received from controller
+// AdvertisingReport represents data parsed from LE Advertising Report
+// Event received from controller
 // See Bluetooth 5.0, vol 2, part E, ch 7.7.65.2
 type AdvertisingReport struct {
 	EventType AdvType
@@ -352,9 +352,9 @@ type AdStructure struct {
 	Data []byte `json:"data"`
 }
 
-//EncodeTo encodes AdStructure into given byte buffer. The buffer should
-//be big enough to hold the data or error is returned. On success, returns
-//the number of bytes written.
+// EncodeTo encodes AdStructure into given byte buffer. The buffer should
+// be big enough to hold the data or error is returned. On success, returns
+// the number of bytes written.
 // See Bluetooth v5.0 vol 3, part C, ch 11
 func (ad *AdStructure) EncodeTo(buf []byte) (int, error) {
 	length := len(ad.Data) + 1 // (type + data)
@@ -407,8 +407,8 @@ func parseAdData(buf []byte) ([]*AdStructure, error) {
 	return structures, nil
 }
 
-//DecodeAdvertisingReport can be used to decode data received in
-//Advertising Report Event. Returns all reports contained in event.
+// DecodeAdvertisingReport can be used to decode data received in
+// Advertising Report Event. Returns all reports contained in event.
 func DecodeAdvertisingReport(buf []byte) ([]*AdvertisingReport, error) {
 
 	eMalformed := fmt.Errorf("malformed data for advertising report")

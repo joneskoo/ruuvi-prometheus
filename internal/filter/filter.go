@@ -3,12 +3,12 @@ package filter
 import (
 	"bytes"
 
-	"gitlab.com/jtaimisto/bluewalker/hci"
+	"github.com/joneskoo/ruuvi-prometheus/internal/hci"
 )
 
-//AdFilter can be used to filter incoming Advertising Reports
-//if Filter() returns true, matching ScanReport is created and
-//passed to the channel returned by Host.StartScan()
+// AdFilter can be used to filter incoming Advertising Reports
+// if Filter() returns true, matching ScanReport is created and
+// passed to the channel returned by Host.StartScan()
 type AdFilter interface {
 	Filter(*hci.AdvertisingReport) bool
 }
@@ -21,8 +21,8 @@ func (f *addressFilter) Filter(rep *hci.AdvertisingReport) bool {
 	return rep.Address == f.addr
 }
 
-//ByAddress returns AdFilter which filters Advertising Reports by sender
-//address. Filter passes report if it comes from given address
+// ByAddress returns AdFilter which filters Advertising Reports by sender
+// address. Filter passes report if it comes from given address
 func ByAddress(address hci.BtAddress) AdFilter {
 	return &addressFilter{addr: address}
 }
@@ -35,16 +35,16 @@ func (f *partAddrFilter) Filter(rep *hci.AdvertisingReport) bool {
 	return rep.Address.HasPrefix(f.part)
 }
 
-//ByPartialAddress returns filter which matches a partial address bytes
-//against bytes given in buffer.
+// ByPartialAddress returns filter which matches a partial address bytes
+// against bytes given in buffer.
 func ByPartialAddress(buf []byte) AdFilter {
 	return &partAddrFilter{part: buf}
 }
 
-//ByVendor returns AdFilter which can be used to filter Advertising Reports
-//based on the start of its vendor specific Advertising Data. Filter
-//passes Advertising Reports which have vendor -specific advertising data and
-//the first bytes of the vendor specific data match the given preamble.
+// ByVendor returns AdFilter which can be used to filter Advertising Reports
+// based on the start of its vendor specific Advertising Data. Filter
+// passes Advertising Reports which have vendor -specific advertising data and
+// the first bytes of the vendor specific data match the given preamble.
 func ByVendor(preamble []byte) AdFilter {
 	return &adDataFilter{typ: hci.AdManufacturerSpecific, preamble: preamble}
 }
@@ -93,8 +93,8 @@ func (f *adTypeFilter) Filter(report *hci.AdvertisingReport) bool {
 	return ret
 }
 
-//ByAdType returns filter which can be used to filter Advertising Reports
-//based on the Type field in the Ad Structures contained on the Advertising Reports
+// ByAdType returns filter which can be used to filter Advertising Reports
+// based on the Type field in the Ad Structures contained on the Advertising Reports
 func ByAdType(typ hci.AdType) AdFilter {
 	return &adTypeFilter{typ: typ}
 }
@@ -120,7 +120,7 @@ func (f *irkFilter) Filter(report *hci.AdvertisingReport) bool {
 	return ret
 }
 
-//ByIrk returns filter which returns true if advertiser address is resolvable using given irk
+// ByIrk returns filter which returns true if advertiser address is resolvable using given irk
 func ByIrk(irk []byte) AdFilter {
 	return &irkFilter{irk: irk}
 }
@@ -155,7 +155,7 @@ func (a *anyCollection) Filter(report *hci.AdvertisingReport) bool {
 	return match
 }
 
-//Any returns a filter which matches if any of the given filters would match
+// Any returns a filter which matches if any of the given filters would match
 func Any(filters []AdFilter) AdFilter {
 	if len(filters) == 1 {
 		return filters[0]
@@ -181,7 +181,7 @@ func (a *allCollection) Filter(report *hci.AdvertisingReport) bool {
 	return match
 }
 
-//All returns a filter which matches if all of the given filters would match
+// All returns a filter which matches if all of the given filters would match
 func All(filters []AdFilter) AdFilter {
 	if len(filters) == 1 {
 		return filters[0]

@@ -27,15 +27,19 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+// Package bluetooth scans for Bluetooth LE advertisements. It is a generic,
+// Ruuvi-agnostic scanner over the vendored HCI/host stack under internal,
+// which is derived from bluewalker by Jukka Taimisto (see internal/LICENSE).
+// Callers supply their own AD filters (see the filter package).
 package bluetooth
 
 import (
 	"fmt"
 	"sync"
 
-	"gitlab.com/jtaimisto/bluewalker/filter"
-	"gitlab.com/jtaimisto/bluewalker/hci"
-	"gitlab.com/jtaimisto/bluewalker/host"
+	"github.com/joneskoo/ruuvi-prometheus/internal/filter"
+	"github.com/joneskoo/ruuvi-prometheus/internal/hci"
+	"github.com/joneskoo/ruuvi-prometheus/internal/host"
 )
 
 // Scanner scans for Bluetooth LE advertisements.
@@ -53,6 +57,10 @@ type Scanner struct {
 type ScannerOpts struct {
 	Device string
 	Logger Logger
+	// Filters restrict which advertising reports are delivered to handlers.
+	// A report passes if it matches all of the filters; an empty slice
+	// delivers every report. See the filter package for constructors.
+	Filters []filter.AdFilter
 }
 
 // Logger is a log.Logger compatible logger.
@@ -66,19 +74,11 @@ func New(opts ScannerOpts) *Scanner {
 		device:  opts.Device,
 		log:     opts.Logger,
 		active:  false,
-		filters: filterVendorIsRuuvi(),
+		filters: opts.Filters,
 
 		quit: make(chan struct{}),
 	}
 	return s
-}
-
-func filterVendorIsRuuvi() []filter.AdFilter {
-	// Ruuvi Innovations Ltd. vendor id: 1177 (little endian)
-	// https://www.bluetooth.com/specifications/assigned-numbers/company-identifiers
-	ruuviVendor := []byte{0x99, 0x04}
-	flt := filter.ByVendor(ruuviVendor)
-	return []filter.AdFilter{flt}
 }
 
 type AdvertisementHandler func(*host.ScanReport)

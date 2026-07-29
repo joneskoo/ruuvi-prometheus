@@ -6,7 +6,7 @@ import "fmt"
 // See Bluetooth 5.0, vol 2, part D
 type ErrorCode byte
 
-//Defined Error codes
+// Defined Error codes
 const (
 	StatusSuccess           ErrorCode = 0x00
 	StatusUnknownCommand    ErrorCode = 0x01

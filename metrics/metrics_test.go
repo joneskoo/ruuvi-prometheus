@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/joneskoo/ruuvi-prometheus/internal/hci"
+	"github.com/joneskoo/ruuvi-prometheus/internal/host"
+	"github.com/joneskoo/ruuvi-prometheus/internal/ruuvi"
 	"github.com/prometheus/client_golang/prometheus/testutil"
-	"gitlab.com/jtaimisto/bluewalker/hci"
-	"gitlab.com/jtaimisto/bluewalker/host"
-	"gitlab.com/jtaimisto/bluewalker/ruuvi"
 )
 
 func reading(t *testing.T, addr string, frame string) RuuviReading {

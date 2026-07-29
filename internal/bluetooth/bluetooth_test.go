@@ -5,31 +5,27 @@ import (
 	"log"
 	"testing"
 
-	"gitlab.com/jtaimisto/bluewalker/host"
+	"github.com/joneskoo/ruuvi-prometheus/internal/filter"
+	"github.com/joneskoo/ruuvi-prometheus/internal/host"
 )
 
 func testLogger() Logger { return log.New(io.Discard, "", 0) }
 
 func TestNew(t *testing.T) {
-	s := New(ScannerOpts{Device: "hci7", Logger: testLogger()})
+	flt := filter.ByVendor([]byte{0xaa, 0xbb})
+	s := New(ScannerOpts{Device: "hci7", Logger: testLogger(), Filters: []filter.AdFilter{flt}})
 
 	if s.device != "hci7" {
 		t.Errorf("device = %q, want hci7", s.device)
 	}
 	if len(s.filters) != 1 {
-		t.Errorf("filters = %d, want 1 (vendor-is-Ruuvi)", len(s.filters))
+		t.Errorf("filters = %d, want 1 (the filter passed in ScannerOpts)", len(s.filters))
 	}
 	if s.quit == nil {
 		t.Error("quit channel is nil")
 	}
 	if s.active {
 		t.Error("active = true, want passive scanning by default")
-	}
-}
-
-func TestFilterVendorIsRuuvi(t *testing.T) {
-	if got := len(filterVendorIsRuuvi()); got != 1 {
-		t.Errorf("filterVendorIsRuuvi() returned %d filters, want 1", got)
 	}
 }
 

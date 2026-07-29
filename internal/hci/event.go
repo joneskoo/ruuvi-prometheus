@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"gitlab.com/jtaimisto/bluewalker/logging"
+	"github.com/joneskoo/ruuvi-prometheus/internal/logging"
 )
 
 // EventCode identifies the HCI Event received
@@ -95,8 +95,8 @@ func (cc *CommandCompleteEvent) GetCommandOpcode() CommandOpCode {
 	return CommandOpCode(le.Uint16(cc.parameters[1:]))
 }
 
-//HasReturnParameters returns true if this command complete event contains
-//return parameters
+// HasReturnParameters returns true if this command complete event contains
+// return parameters
 func (cc *CommandCompleteEvent) HasReturnParameters() bool {
 	return len(cc.parameters) > 3
 }
@@ -106,7 +106,7 @@ func (cc *CommandCompleteEvent) GetReturnParameters() []byte {
 	return cc.parameters[3:]
 }
 
-//GetStatusParameter returns the first parameter as status code.
+// GetStatusParameter returns the first parameter as status code.
 // XXX bounds check
 func (cc *CommandCompleteEvent) GetStatusParameter() ErrorCode {
 	return ErrorCode(cc.parameters[3])
@@ -131,12 +131,12 @@ const (
 	SubeventAdvertisingReport SubeventCode = 0x02
 )
 
-//GetSubeventCode return subevent code parameter value
+// GetSubeventCode return subevent code parameter value
 func (le *LeMetaEvent) GetSubeventCode() SubeventCode {
 	return SubeventCode(le.parameters[0])
 }
 
-//GetParameters returns parameters in this event, subevent code is not included
+// GetParameters returns parameters in this event, subevent code is not included
 func (le *LeMetaEvent) GetParameters() []byte {
 	return le.parameters[1:]
 }

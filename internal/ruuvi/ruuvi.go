@@ -71,6 +71,13 @@ const (
 	v6DataLength int = 20
 )
 
+// ManufacturerID is the Bluetooth SIG company identifier assigned to Ruuvi
+// Innovations Ltd. It prefixes the manufacturer specific advertising data of
+// every Ruuvi sensor and is the single source of truth for Ruuvi identity;
+// the BLE scan filter and Decode both key off it.
+// https://www.bluetooth.com/specifications/assigned-numbers/company-identifiers
+const ManufacturerID uint16 = 0x0499
+
 // Data format identifiers as transmitted in the first byte of the
 // vendor specific data (after the manufacturer ID).
 const (
@@ -383,7 +390,7 @@ func Decode(data []byte) (*Data, error) {
 
 	// Check if the data contains the Ruuvi Manufacturer ID, strip it
 	// Otherwise we assume the Manufacturer ID is already stripped
-	if len(data) >= 2 && binary.LittleEndian.Uint16(data) == 0x0499 {
+	if len(data) >= 2 && binary.LittleEndian.Uint16(data) == ManufacturerID {
 		data = data[2:]
 	}
 	if len(data) == 0 {

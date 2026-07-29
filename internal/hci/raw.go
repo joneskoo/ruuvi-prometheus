@@ -1,4 +1,5 @@
-//+build linux
+//go:build linux
+// +build linux
 
 package hci
 
@@ -11,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 
-	"gitlab.com/jtaimisto/bluewalker/logging"
+	"github.com/joneskoo/ruuvi-prometheus/internal/logging"
 	"golang.org/x/sys/unix"
 )
 

@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
-	"gitlab.com/jtaimisto/bluewalker/filter"
-	"gitlab.com/jtaimisto/bluewalker/hci"
-	"gitlab.com/jtaimisto/bluewalker/logging"
+	"github.com/joneskoo/ruuvi-prometheus/internal/filter"
+	"github.com/joneskoo/ruuvi-prometheus/internal/hci"
+	"github.com/joneskoo/ruuvi-prometheus/internal/logging"
 )
 
 // how long to wait for command to execute
@@ -28,8 +28,8 @@ type exec struct {
 	fail func(error)
 }
 
-//ScanReport contains information about a device found on scanning
-//See Bluetooth 5.0, vol 2, part E, ch 7.7.65.2
+// ScanReport contains information about a device found on scanning
+// See Bluetooth 5.0, vol 2, part E, ch 7.7.65.2
 type ScanReport struct {
 	Type    hci.AdvType
 	Address hci.BtAddress
@@ -333,10 +333,10 @@ func (h *Host) Init() error {
 	return nil
 }
 
-//StartScanning will start scanning for Bluetooth LE Advertisements
-//Active defines if active or passive scanning should be done
-//The returned channel can be used to receive all scan reports matching _any_
-//of the filters on list. The returned cannel should _not_ be closed.
+// StartScanning will start scanning for Bluetooth LE Advertisements
+// Active defines if active or passive scanning should be done
+// The returned channel can be used to receive all scan reports matching _any_
+// of the filters on list. The returned cannel should _not_ be closed.
 func (h *Host) StartScanning(active bool, filters []filter.AdFilter) (chan *ScanReport, error) {
 
 	if len(filters) > 0 {
@@ -381,7 +381,7 @@ func (h *Host) StartScanning(active bool, filters []filter.AdFilter) (chan *Scan
 	return h.ad, nil
 }
 
-//StopScanning stops scanning for advertising LE devices
+// StopScanning stops scanning for advertising LE devices
 func (h *Host) StopScanning() error {
 
 	cmd := hci.CommandPacket{OpCode: hci.CommandLeSetScanEnable}
@@ -397,7 +397,7 @@ func (h *Host) StopScanning() error {
 	return nil
 }
 
-//SetAdvertisingParams set advertising params to the controller.
+// SetAdvertisingParams set advertising params to the controller.
 // hci.DefaultAdvParameters() can be used to get default set of parameters.
 func (h *Host) SetAdvertisingParams(advParams hci.AdvertisingParameters) error {
 
@@ -467,19 +467,19 @@ func (h *Host) setAdvData(data []*hci.AdStructure, scanResp bool) error {
 	return nil
 }
 
-//SetAdvertisingData sets the advertising data that will be sent
-//when advertising is enabled
+// SetAdvertisingData sets the advertising data that will be sent
+// when advertising is enabled
 func (h *Host) SetAdvertisingData(data []*hci.AdStructure) error {
 	return h.setAdvData(data, false)
 }
 
-//SetScanResponse sets the scan response data which will be sent
-//when advertising and the mode allows it.
+// SetScanResponse sets the scan response data which will be sent
+// when advertising and the mode allows it.
 func (h *Host) SetScanResponse(data []*hci.AdStructure) error {
 	return h.setAdvData(data, true)
 }
 
-//StartAdvertising directs the controller to start sending advertisments
+// StartAdvertising directs the controller to start sending advertisments
 func (h *Host) StartAdvertising() error {
 
 	cmd := hci.CommandPacket{OpCode: hci.CommandLeSetAdvEnable}
@@ -493,7 +493,7 @@ func (h *Host) StartAdvertising() error {
 	return nil
 }
 
-//StopAdvertising directs the controller to stop sending advertisments
+// StopAdvertising directs the controller to stop sending advertisments
 func (h *Host) StopAdvertising() error {
 
 	cmd := hci.CommandPacket{OpCode: hci.CommandLeSetAdvEnable}
@@ -507,7 +507,7 @@ func (h *Host) StopAdvertising() error {
 	return nil
 }
 
-//SetRandomAddress sets LE Random Device Address to the Controller
+// SetRandomAddress sets LE Random Device Address to the Controller
 func (h *Host) SetRandomAddress(addr hci.BtAddress) error {
 	if addr.Atype != hci.LeRandomAddress {
 		return fmt.Errorf("invalid address type %s, expected %s",

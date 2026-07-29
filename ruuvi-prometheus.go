@@ -35,10 +35,11 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/joneskoo/ruuvi-prometheus/bluetooth"
+	"github.com/joneskoo/ruuvi-prometheus/internal/bluetooth"
+	"github.com/joneskoo/ruuvi-prometheus/internal/filter"
+	"github.com/joneskoo/ruuvi-prometheus/internal/host"
+	"github.com/joneskoo/ruuvi-prometheus/internal/ruuvi"
 	"github.com/joneskoo/ruuvi-prometheus/metrics"
-	"gitlab.com/jtaimisto/bluewalker/host"
-	"gitlab.com/jtaimisto/bluewalker/ruuvi"
 )
 
 const (
@@ -58,7 +59,8 @@ func main() {
 	log.Printf("%s %s listening on %v", commandName, version, cmdline.listen)
 
 	if !cmdline.debug {
-		// FIXME: bluewalker outputs to global logger so we need to discard all log globally
+		// The vendored BLE stack (ble/internal) logs through the standard
+		// global logger, so silence it globally unless -debug is set.
 		log.SetOutput(ioutil.Discard)
 	}
 
@@ -67,8 +69,9 @@ func main() {
 		Handler: metrics.Handler,
 	}
 	scanner := bluetooth.New(bluetooth.ScannerOpts{
-		Device: cmdline.device,
-		Logger: getDebugLogger(cmdline.debug),
+		Device:  cmdline.device,
+		Logger:  getDebugLogger(cmdline.debug),
+		Filters: []filter.AdFilter{ruuviAdFilter()},
 	})
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -115,6 +118,17 @@ func getDebugLogger(debug bool) *log.Logger {
 		output = ioutil.Discard
 	}
 	return log.New(output, "DEBUG: ", log.LstdFlags)
+}
+
+// ruuviAdFilter matches advertisements that carry Ruuvi manufacturer specific
+// data. This is where the generic BLE scanner and the Ruuvi domain are
+// combined: the scanner only knows about filters, and the Ruuvi identity comes
+// from the ruuvi package.
+func ruuviAdFilter() filter.AdFilter {
+	// Manufacturer specific data is prefixed with the company id in
+	// little-endian byte order.
+	preamble := []byte{byte(ruuvi.ManufacturerID & 0xff), byte(ruuvi.ManufacturerID >> 8)}
+	return filter.ByVendor(preamble)
 }
 
 func handleRuuviAdvertisement(sr *host.ScanReport) {

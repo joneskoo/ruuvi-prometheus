@@ -8,8 +8,8 @@ import (
 	"os"
 	"testing"
 
-	"gitlab.com/jtaimisto/bluewalker/hci"
-	"gitlab.com/jtaimisto/bluewalker/host"
+	"github.com/joneskoo/ruuvi-prometheus/internal/hci"
+	"github.com/joneskoo/ruuvi-prometheus/internal/host"
 )
 
 func TestDeviceFlag(t *testing.T) {
@@ -108,4 +108,30 @@ func TestHandleRuuviAdvertisement(t *testing.T) {
 		},
 	}
 	handleRuuviAdvertisement(sr)
+}
+
+func TestRuuviAdFilter(t *testing.T) {
+	filt := ruuviAdFilter()
+
+	// Manufacturer specific data prefixed with the Ruuvi company id (0x0499,
+	// little-endian 0x99 0x04) must match; a different vendor must not.
+	ruuvi := &hci.AdvertisingReport{
+		Data: []*hci.AdStructure{{
+			Typ:  hci.AdManufacturerSpecific,
+			Data: []byte{0x99, 0x04, 0x05, 0x00},
+		}},
+	}
+	if !filt.Filter(ruuvi) {
+		t.Error("ruuviAdFilter did not match Ruuvi manufacturer data")
+	}
+
+	other := &hci.AdvertisingReport{
+		Data: []*hci.AdStructure{{
+			Typ:  hci.AdManufacturerSpecific,
+			Data: []byte{0x4c, 0x00, 0x05, 0x00},
+		}},
+	}
+	if filt.Filter(other) {
+		t.Error("ruuviAdFilter matched non-Ruuvi manufacturer data")
+	}
 }

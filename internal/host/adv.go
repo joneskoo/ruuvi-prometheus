@@ -1,9 +1,9 @@
 package host
 
 import (
-	"gitlab.com/jtaimisto/bluewalker/filter"
-	"gitlab.com/jtaimisto/bluewalker/hci"
-	"gitlab.com/jtaimisto/bluewalker/logging"
+	"github.com/joneskoo/ruuvi-prometheus/internal/filter"
+	"github.com/joneskoo/ruuvi-prometheus/internal/hci"
+	"github.com/joneskoo/ruuvi-prometheus/internal/logging"
 )
 
 // Parse Advertising Report Data.

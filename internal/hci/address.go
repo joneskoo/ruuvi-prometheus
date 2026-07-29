@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-//BtAddressType defines address type for bluetooth address
+// BtAddressType defines address type for bluetooth address
 type BtAddressType byte
 
 // BtAddress defines the Bluetooth address
@@ -22,7 +22,7 @@ func (ba BtAddress) Put(buf []byte) {
 	copy(buf, ba.raw[0:])
 }
 
-//HasPrefix checks if address has given prefix.
+// HasPrefix checks if address has given prefix.
 func (ba BtAddress) HasPrefix(buf []byte) bool {
 	if len(buf) > 6 {
 		// not a prefix
@@ -40,7 +40,7 @@ func (ba BtAddress) String() string {
 	return fmt.Sprintf("%.2x:%.2x:%.2x:%.2x:%.2x:%.2x", ba.raw[5], ba.raw[4], ba.raw[3], ba.raw[2], ba.raw[1], ba.raw[0])
 }
 
-//MarshalJSON marshals BtAddress into JSON
+// MarshalJSON marshals BtAddress into JSON
 func (ba BtAddress) MarshalJSON() ([]byte, error) {
 
 	return json.Marshal(struct {
@@ -49,7 +49,7 @@ func (ba BtAddress) MarshalJSON() ([]byte, error) {
 	}{ba.String(), ba.Atype.String()})
 }
 
-//IsStatic returns true if address is static random address
+// IsStatic returns true if address is static random address
 // See Bluetooth 5.0, vol6, part B, ch 1.3.2.1
 func (ba BtAddress) IsStatic() bool {
 	if ba.Atype != LeRandomAddress {
@@ -58,7 +58,7 @@ func (ba BtAddress) IsStatic() bool {
 	return ba.raw[5]&0xc0 == 0xc0
 }
 
-//IsNonResolvable returns true if address is non-resolvable private random address
+// IsNonResolvable returns true if address is non-resolvable private random address
 // See Bluetooth 5.0, vol6, part B, ch 1.3.2.2
 func (ba BtAddress) IsNonResolvable() bool {
 	if ba.Atype != LeRandomAddress {
@@ -67,7 +67,7 @@ func (ba BtAddress) IsNonResolvable() bool {
 	return ba.raw[5]&0xc0 == 0x00
 }
 
-//IsResolvable returns true if address is resolvable private random address
+// IsResolvable returns true if address is resolvable private random address
 // See Bluetooth 5.0, vol6, part B, ch 1.3.2.2
 func (ba BtAddress) IsResolvable() bool {
 	if ba.Atype != LeRandomAddress {
@@ -107,8 +107,8 @@ func (ba BtAddress) Resolve(irk []byte) bool {
 	return bytes.Equal(localHash, hash)
 }
 
-//UnmarshalJSON parses the JSON encoded Bluetooth Address (as returned by
-//ba.MarshalJSON()) and sets values of this address as those parsed
+// UnmarshalJSON parses the JSON encoded Bluetooth Address (as returned by
+// ba.MarshalJSON()) and sets values of this address as those parsed
 func (ba *BtAddress) UnmarshalJSON(b []byte) error {
 
 	s := struct {
