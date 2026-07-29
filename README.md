@@ -9,15 +9,9 @@ reports calibration in progress; see the ruuvi_calibrating metric.
 
 ## Usage
 
-I use ruuvi exporter with Alpine Linux myself and it’s on
-[Alpine Linux repository in edge/testing].
-
-To use this binary release, install Alpine edge and enable the testing
-repository and apk add ruuvi-prometheus.
-Enable service to start at booth with `rc-update add ruuvi-prometheus`.
-
-You will need to uncomment "rpi bluetooth" in /etc/mdev.conf for
-Raspberry Pi Bluetooth to work.
+I run this as a [gokrazy] appliance on a Raspberry Pi: add
+`github.com/joneskoo/ruuvi-prometheus` to your gokrazy instance's packages,
+alongside `github.com/gokrazy/bluetooth` for the BLE adapter.
 
 The service binds listen address to `:9521` by default.
 
@@ -51,16 +45,6 @@ For example:
         target_label: 'location'
         replacement: 'outdoors'
 ```
-
-## Further development
-
-Ideally I would like to run this using [gokrazy] instead, but
-my current setup requires WiFi with WPA2 and Raspberry Pi Bluetooth
-which are not supported yet. Once those blockers are solved, gokrazy
-can create Raspberry appliance image without any C code besides Linux.
-
-[Alpine Linux repository in edge/testing]: https://pkgs.alpinelinux.org/packages?name=ruuvi-prometheus&arch=armhf
-[gokrazy]: https://gokrazy.org/
 
 ## Exported metrics
 
@@ -144,3 +128,4 @@ authorship — Jukka's for the forked code, and both holders' for files that mix
 his code with changes made here.
 
 [bluewalker]: https://gitlab.com/jtaimisto/bluewalker/
+[gokrazy]: https://gokrazy.org/
