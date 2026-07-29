@@ -86,11 +86,11 @@ can create Raspberry appliance image without any C code besides Linux.
   <dt>ruuvi_temperature_celsius</dt>
   <dd>Ruuvi tag sensor temperature</dd>
 
-  <dt>ruuvi_format</dt>
-  <dd>Ruuvi frame format version (e.g. 3 or 5)</dd>
+  <dt>ruuvi_format_info</dt>
+  <dd>Ruuvi frame format version; the value is always 1 and the version (3, 5 or 6) is carried in the <code>version</code> label</dd>
 
-  <dt>ruuvi_movecount_total</dt>
-  <dd>Ruuvi movement counter</dd>
+  <dt>ruuvi_movement_count</dt>
+  <dd>Ruuvi movement counter as reported by the sensor</dd>
 
   <dt>ruuvi_seqno_current</dt>
   <dd>Ruuvi frame sequence number</dd>

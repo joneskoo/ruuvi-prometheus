@@ -25,6 +25,7 @@
 package metrics
 
 import (
+	"strconv"
 	"sync"
 	"time"
 
@@ -70,10 +71,14 @@ var (
 		Help: "Ruuvi tag received signal strength RSSI",
 	}, []string{"device"})
 
-	format = promauto.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "ruuvi_format",
-		Help: "Ruuvi frame format version (e.g. 3, 5 or 6)",
-	}, []string{"device"})
+	// formatInfo is an info-style metric: the value is always 1 and the frame
+	// format version is carried in the "version" label. Encoding the version as
+	// a label rather than the metric value keeps it aggregatable/joinable and
+	// avoids the enum-as-value anti-pattern.
+	formatInfo = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "ruuvi_format_info",
+		Help: "Ruuvi frame format version; value is always 1, version is in the version label",
+	}, []string{"device", "version"})
 
 	txPower = promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "ruuvi_txpower_dbm",
@@ -81,8 +86,8 @@ var (
 	}, []string{"device"})
 
 	moveCount = promauto.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "ruuvi_movecount_total",
-		Help: "Ruuvi movement counter",
+		Name: "ruuvi_movement_count",
+		Help: "Ruuvi movement counter as reported by the sensor",
 	}, []string{"device"})
 
 	seqno = promauto.NewGaugeVec(prometheus.GaugeOpts{
@@ -133,7 +138,7 @@ var deviceVecs = []interface {
 	DeletePartialMatch(prometheus.Labels) int
 }{
 	ruuviFrames, humidity, temperature, pressure, acceleration, voltage,
-	signalRSSI, format, txPower, moveCount, seqno,
+	signalRSSI, formatInfo, txPower, moveCount, seqno,
 	pm25, co2, vocIndex, noxIndex, luminosity, soundAvg, calibrating,
 }
 
@@ -162,7 +167,7 @@ func ObserveRuuvi(o RuuviReading) {
 
 	ruuviFrames.WithLabelValues(addr).Inc()
 	signalRSSI.WithLabelValues(addr).Set(float64(o.Rssi))
-	format.WithLabelValues(addr).Set(float64(o.DataFormat))
+	formatInfo.WithLabelValues(addr, strconv.Itoa(int(o.DataFormat))).Set(1)
 
 	if o.VoltageValid() {
 		voltage.WithLabelValues(addr).Set(float64(o.Voltage) / 1000)

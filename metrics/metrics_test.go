@@ -49,8 +49,8 @@ func TestCalibrationGatesAirQuality(t *testing.T) {
 	clearDevice(t)
 
 	ObserveRuuvi(reading(t, testAddr, v6Frame))
-	if got := testutil.ToFloat64(format.WithLabelValues(testAddr)); got != 6 {
-		t.Fatalf("format = %v, expected 6", got)
+	if got := testutil.ToFloat64(formatInfo.WithLabelValues(testAddr, "6")); got != 1 {
+		t.Fatalf("format_info{version=6} = %v, expected 1", got)
 	}
 	if got := testutil.ToFloat64(calibrating.WithLabelValues(testAddr)); got != 0 {
 		t.Fatalf("calibrating = %v, expected 0", got)
