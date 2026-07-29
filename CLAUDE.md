@@ -25,15 +25,19 @@ There is no CI; run the tests locally before committing.
 Data flows one way: BLE advertisement → decode → set metric; HTTP scrapes read
 the metric vectors.
 
-- `bluetooth/bluetooth.go` — `Scanner` wraps
-  [bluewalker](https://gitlab.com/jtaimisto/bluewalker). It filters on the Ruuvi
-  vendor id, opens a raw HCI socket in `Scan`, and dispatches each `ScanReport`
-  to the registered handlers. `Scan` is hardware-bound (real HCI socket) and is
-  not unit-tested.
-- `ruuvi-prometheus.go` — `main` wires the scanner to
-  `handleRuuviAdvertisement`, which runs `ruuvi.Decode` on each AD structure and
-  calls `metrics.ObserveRuuvi`. It also starts the HTTP server and handles
-  SIGINT for shutdown.
+- `internal/bluetooth` — generic, Ruuvi-agnostic `Scanner`. It opens a raw HCI
+  socket in `Scan`, applies the caller-supplied `filter.AdFilter`s, and
+  dispatches each `host.ScanReport` to the registered handlers. `Scan` is
+  hardware-bound (real HCI socket) and is not unit-tested.
+- `internal/filter`, `internal/hci`, `internal/host`, `internal/logging` — the
+  forked BLE stack. `internal/ruuvi` — the Ruuvi frame decoder and the
+  `ruuvi.ManufacturerID` constant (the single source of truth for Ruuvi
+  identity). `main` and `metrics` import these directly.
+- `ruuvi-prometheus.go` — `main` is where the generic scanner and the Ruuvi
+  domain are combined: `ruuviAdFilter()` builds a vendor filter from
+  `ruuvi.ManufacturerID`, and `handleRuuviAdvertisement` runs `ruuvi.Decode` on
+  each AD structure and calls `metrics.ObserveRuuvi`. It also starts the HTTP
+  server and handles SIGINT for shutdown.
 - `cmdline.go` — flag parsing into `settings`.
 - `metrics/metrics.go` — `ObserveRuuvi` records one reading into `promauto`
   metric vectors (device label = MAC). A background TTL sweep (`clearExpired`,
@@ -59,14 +63,23 @@ the metric vectors.
   and intentionally not unit-tested, which caps aggregate coverage well below the
   `metrics` package's own level.
 
-## Planned work
+## Vendored BLE/Ruuvi stack
 
-- **Extract the Bluetooth/Ruuvi parsing into a new, self-owned library and drop
-  the `bluewalker` dependency.** Agreed with bluewalker's author (jtaimisto): the
-  relevant BLE and Ruuvi-parsing code will be extracted into a new module owned
-  by this project, carrying bluewalker's existing license. Once that module
-  exists, plan which code moves out of `ruuvi-prometheus` into it — the new
-  module should expose `bluetooth` and `ruuvi` as separate packages — leaving
-  `ruuvi-prometheus` a thin exporter on top. Candidates to move: the `bluetooth/`
-  scanner wrapper and the frame-decoding currently provided by `bluewalker/ruuvi`
-  (with `handleRuuviAdvertisement` reduced to glue).
+The BLE scanning stack and Ruuvi frame decoder are a vendored fork of
+[bluewalker](https://gitlab.com/jtaimisto/bluewalker) by Jukka Taimisto,
+extended here with Ruuvi data format 6 support. There is no external
+`bluewalker` dependency; the only third-party runtime dependency for BLE is
+`golang.org/x/sys` (raw HCI sockets).
+
+- The whole stack lives under `internal/` (`bluetooth`, `filter`, `hci`,
+  `host`, `logging`, `ruuvi`). Go's internal-package rule keeps it out of reach
+  of any external importer; `main` and `metrics` (rooted at the module root)
+  import the packages directly, the same way this project used the upstream
+  `bluewalker` packages before the fork.
+- The fork now lives in this repo and no longer tracks upstream, so edit it in
+  place when it makes sense (e.g. adding Ruuvi data formats). Keep responsibilities
+  split: `filter` is generic AD filtering, `bluetooth` is a Ruuvi-agnostic
+  scanner, Ruuvi specifics (ids, decoding) live in `internal/ruuvi`, and the
+  combination of the two lives in `main`.
+- The fork carries bluewalker's 2-clause BSD license in `internal/LICENSE`.
+  Keep that file, and keep the upstream copyright headers in the forked source.

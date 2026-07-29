@@ -130,4 +130,15 @@ are only present on data formats 3 and 5.
 * Linux
 * Bluetooth LE; bluetoothd must not be running.
 
+The exporter is pure Go with no cgo: it talks to the controller over a raw
+HCI socket via `golang.org/x/sys`.
+
+## Acknowledgements and license
+
+The Bluetooth LE scanning stack and the Ruuvi frame decoder under `internal/`
+are a vendored fork of [bluewalker] by Jukka Taimisto, extended here with Ruuvi
+data format 6 support. That code is used under the 2-clause BSD license (see
+`internal/LICENSE`); the rest of this repository is under its own license (see
+`LICENSE`).
+
 [bluewalker]: https://gitlab.com/jtaimisto/bluewalker/
